@@ -1,0 +1,15 @@
+{
+    "name": "abdelrhman-saeed/route",
+    "autoload": {
+        "psr-4": {
+            "AbdelrhmanSaeed\\Route\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "abdelrhman-saeed",
+            "email": "abdelrhmansaeed001@gmail.com"
+        }
+    ],
+    "require": {}
+}
