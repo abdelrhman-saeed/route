@@ -1,1 +1,3 @@
 dev-kits/
+.vscode/
+vendor/
