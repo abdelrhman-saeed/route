@@ -5,23 +5,29 @@ namespace AbdelrhmanSaeed\Route\URI;
 
 class URIConstraints
 {
-    public CONST string ALPHA       = '\w+';
-    public CONST string NUM         = '\d+';
-    public CONST string ALPHANUM    = '[\w\d]+';
-    public CONST string OPTIONAL_PARAMETER_REGEX   = '[\w\d]+\?';
-
+    public CONST string ALPHA       = '[a-z]+';
+    public CONST string NUM         = '[0-9]+';
+    public CONST string ALPHANUM    = '\w+';
+    private CONST string OPTIONAL_PARAMETER_REGEX   = '\w+\?';
 
     public function __construct(private URI $uri) {}
 
-    public function where(string $routeParameter, string $regex): self
+    private function replaceRouteSegmentsWithRegex(string $routeParameter, string $regex): self
     {
-        $url = $this->uri->getUrl();
-        $url = preg_replace("/\{$routeParameter\}/", $regex, $url, -1, $count);
+        $url = preg_replace("#\{$routeParameter\}#", $regex,
+                    $this->uri->getUrl(),
+                    -1,
+                    $count
+                );
 
-        $count >! 0 ?:
-            $this->uri->setUrl($url);
+        $count >! 0 ?: $this->uri->setUrl($url);
 
         return $this;
+    }
+
+    public function where(string $routeParamter, string $regex): self
+    {
+        return $this->replaceRouteSegmentsWithRegex($routeParamter, "($regex)");
     }
 
     public function whereIn(string $routeParameter, array $in): self
@@ -34,11 +40,12 @@ class URIConstraints
         ! is_array($regex)
             ?: $regex = implode("|", $regex);
 
-        return $this->where(self::OPTIONAL_PARAMETER_REGEX, "($regex)*");
+        return $this->replaceRouteSegmentsWithRegex(self::OPTIONAL_PARAMETER_REGEX, "*($regex)*");
     }
+
     public function formatUrlToRegex(): void
     {
         $this->where(self::ALPHANUM, self::ALPHANUM);
-        $this->where(self::OPTIONAL_PARAMETER_REGEX, self::OPTIONAL_PARAMETER_REGEX);
+        $this->whereOptional(self::ALPHANUM);
     }
 }
