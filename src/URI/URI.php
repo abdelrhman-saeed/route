@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class URI
 {
-    private string $url;
+    private string $regexRouteFormat;
     private ?string $name = null;
     private ?URI $next = null;
     private ?Middleware $middleware = null;
@@ -17,7 +17,7 @@ class URI
 
     public function __construct(private string $route, private string $method, private URIAction $uriAction)
     {
-        $this->url = "#^$this->route$#";
+        $this->regexRouteFormat = "#^$this->route$#";
     }
 
     private function getUriAction(): URIAction
@@ -30,15 +30,15 @@ class URI
         return $this->method;
     }
 
-    public function setUrl(string $url): self
+    public function setRegexedRouteFormat(string $regexedRouteFormat): self
     {
-        $this->url = $url;
+        $this->regexRouteFormat = $regexedRouteFormat;
         return $this;
     }
 
-    public function getUrl(): string
+    public function getRegexedRouteFormat(): string
     {
-        return $this->url;
+        return $this->regexRouteFormat;
     }
 
     public function getRoute(): string
@@ -86,7 +86,7 @@ class URI
 
         $pathInfo = trim($request->getPathInfo(), '/');
 
-        if ( ! preg_match($this->getUrl(), $pathInfo, $matches))
+        if ( ! preg_match($this->getRegexedRouteFormat(), $pathInfo, $matches))
         {
             $this->next?->handle($request);
             return;

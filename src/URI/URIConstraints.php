@@ -14,13 +14,14 @@ class URIConstraints
 
     private function replaceRouteSegmentsWithRegex(string $routeParameter, string $regex): self
     {
-        $url = preg_replace("#\{$routeParameter\}#", $regex,
-                    $this->uri->getUrl(),
-                    -1,
-                    $count
-                );
+        $regexedRouteFormat = preg_replace(
+                        "#\{$routeParameter\}#", $regex,
+                        $this->uri->getRegexedRouteFormat(),
+                        -1,
+                        $count
+                        );
 
-        $count >! 0 ?: $this->uri->setUrl($url);
+        $count >! 0 ?: $this->uri->setRegexedRouteFormat($regexedRouteFormat);
 
         return $this;
     }
