@@ -8,16 +8,14 @@ use Symfony\Component\HttpFoundation\Request;
 
 class URI
 {
-    private string $regexRouteFormat;
     private ?string $name = null;
     private ?URI $next = null;
     private ?Middleware $middleware = null;
     private URIConstraints $uriConstraints;
-    public static array $supportedHttpMethods = ['get', 'post', 'put', 'patch', 'delete'];
 
     public function __construct(private string $route, private string $method, private URIAction $uriAction)
     {
-        $this->regexRouteFormat = "#^$this->route$#";
+        $this->route = "#^$this->route$#";
     }
 
     private function getUriAction(): URIAction
@@ -30,31 +28,29 @@ class URI
         return $this->method;
     }
 
-    public function setRegexedRouteFormat(string $regexedRouteFormat): self
-    {
-        $this->regexRouteFormat = $regexedRouteFormat;
-        return $this;
-    }
-
-    public function getRegexedRouteFormat(): string
-    {
-        return $this->regexRouteFormat;
-    }
-
     public function getRoute(): string
     {
         return $this->route;
     }
 
+    public function setRoute(string $route): self
+    {
+        $this->route = $route;
+
+        return $this;
+    }
+
     public function setNext(URI $uri): self
     {
         $this->next = $uri;
+
         return $this;
     }
 
     public function setUriConstraints(URIConstraints $uriConstraints): self
     {
         $this->uriConstraints = $uriConstraints;
+
         return $this;
     }
 
@@ -65,12 +61,14 @@ class URI
     public function setMiddleware(Middleware $middelware): self
     {
         $this->middleware = $middelware;
+
         return $this;
     }
 
     public function setName(string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -86,7 +84,7 @@ class URI
 
         $pathInfo = trim($request->getPathInfo(), '/');
 
-        if ( ! preg_match($this->getRegexedRouteFormat(), $pathInfo, $matches))
+        if ( ! preg_match($this->getRoute(), $pathInfo, $matches))
         {
             $this->next?->handle($request);
             return;

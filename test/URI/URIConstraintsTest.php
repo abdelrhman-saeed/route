@@ -24,12 +24,12 @@ class URIConstraintsTest extends TestCase
 
         $this->uriMock
                 ->expects($this->once())    
-                ->method('getRegexedRouteFormat')
+                ->method('getRoute')
                 ->willReturn($route);
 
         $this->uriMock
                 ->expects($this->once())
-                ->method('setRegexedRouteFormat')
+                ->method('setRoute')
                 ->with($regexedRoute);
 
         $reflectedMethod = (new \ReflectionClass(URIConstraints::class))

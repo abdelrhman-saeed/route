@@ -16,12 +16,12 @@ class URIConstraints
     {
         $regexedRouteFormat = preg_replace(
                         "#\{$routeParameter\}#", $regex,
-                        $this->uri->getRegexedRouteFormat(),
+                        $this->uri->getRoute(),
                         -1,
                         $count
                         );
 
-        $count >! 0 ?: $this->uri->setRegexedRouteFormat($regexedRouteFormat);
+        $count >! 0 ?: $this->uri->setRoute($regexedRouteFormat);
 
         return $this;
     }

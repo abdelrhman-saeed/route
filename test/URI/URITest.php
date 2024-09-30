@@ -39,7 +39,7 @@ class URITest extends TestCase
                                     $this->method,
                                     $this->uriActionMock
                                 ])
-                                ->onlyMethods(['getRegexedRouteFormat'])
+                                ->onlyMethods(['getRoute'])
                                 ->getMock();
 
         $this->uriMock
@@ -61,7 +61,7 @@ class URITest extends TestCase
 
         $this->uriMock
                 ->expects($this->once())        
-                ->method('getRegexedRouteFormat')
+                ->method('getRoute')
                 ->willReturn($this->regexedRoute);
 
         $this->requestMock
@@ -96,7 +96,7 @@ class URITest extends TestCase
 
         $this->uriMock
                 ->expects($this->once())
-                ->method('getRegexedRouteFormat')
+                ->method('getRoute')
                 ->willReturn('just-wrong-pattern-to-make-the-regex-fail');
 
 
@@ -126,7 +126,7 @@ class URITest extends TestCase
 
         $this->uriMock
                 ->expects($this->once())        
-                ->method('getRegexedRouteFormat')
+                ->method('getRoute')
                 ->willReturn($this->regexedRoute);
 
         $this->requestMock
