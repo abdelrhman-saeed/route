@@ -1,7 +1,11 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use AbdelrhmanSaeed\Route\URI\{URI, URIConstraints};
+use AbdelrhmanSaeed\Route\URI\{
+        URI,
+        Constraints\IURIConstraints,
+        Constraints\URIConstraints
+};
 
 class URIConstraintsTest extends TestCase
 {
@@ -32,12 +36,15 @@ class URIConstraintsTest extends TestCase
                 ->method('setRoute')
                 ->with($regexedRoute);
 
-        $reflectedMethod = (new \ReflectionClass(URIConstraints::class))
-                                    ->getMethod('replaceRouteSegmentsWithRegex');
+        $reflectedReplaceRouteSegmentMethod =
+                (new \ReflectionClass(URIConstraints::class))
+                        ->getMethod('replaceRouteSegmentsWithRegex');
 
-        $reflectedMethod->invokeArgs(
-                $this->uriConstraintsMock,
-                [URIConstraints::ALPHANUM, URIConstraints::ALPHANUM]);
+        $reflectedReplaceRouteSegmentMethod
+                ->invokeArgs(
+                        $this->uriConstraintsMock,
+                        [IURIConstraints::ALPHANUM, IURIConstraints::ALPHANUM
+                ]);
     }
     public function testWhereIn(): void
     {

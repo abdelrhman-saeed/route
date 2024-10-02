@@ -1,6 +1,7 @@
 <?php
 
 use AbdelrhmanSaeed\Route\Exceptions\MethodNotSupportedForThisRoute;
+use AbdelrhmanSaeed\Route\Exceptions\RequestHandledException;
 use AbdelrhmanSaeed\Route\Middleware;
 use AbdelrhmanSaeed\Route\URI\{
         URI,
@@ -38,7 +39,7 @@ class URITest extends TestCase
         $this->uriMock = $this->getMockBuilder(URI::class)
                                 ->setConstructorArgs([
                                     $this->url,
-                                    $this->method,
+                                    [$this->method],
                                     $this->uriActionMock
                                 ])
                                 ->onlyMethods(['getRoute'])
@@ -52,10 +53,6 @@ class URITest extends TestCase
     }
     public function testHandle(): void
     {
-        $this->uriConstraintsMock
-                ->expects($this->once())
-                ->method('formatUrlToRegex');
-
         $this->requestMock
                 ->expects($this->once())
                 ->method('getPathInfo')
@@ -68,9 +65,8 @@ class URITest extends TestCase
 
         $this->requestMock
                 ->expects($this->once())
-                ->method('isMethod')
-                ->with($this->method)
-                ->willReturn(true);
+                ->method('getMethod')
+                ->willReturn($this->method);
 
         $this->middlewareMock
                 ->expects($this->once())    
@@ -82,14 +78,15 @@ class URITest extends TestCase
                 ->method('execute')
                 ->with(...['22', '3', 'information']);
 
-        $this->uriMock->handle($this->requestMock);
+        $this->expectException(RequestHandledException::class);
+
+        $this->uriMock
+                ->handle($this->requestMock);
+
     }
 
     public function testHandleMethodWhenUriDoesntMatchUrl(): void
     {
-        $this->uriConstraintsMock
-                ->expects($this->once())
-                ->method('formatUrlToRegex');
 
         $this->requestMock
                 ->expects($this->once())
@@ -99,7 +96,7 @@ class URITest extends TestCase
         $this->uriMock
                 ->expects($this->once())
                 ->method('getRoute')
-                ->willReturn('just-wrong-pattern-to-make-the-regex-fail');
+                ->willReturn('#just-wrong-pattern-to-make-the-regex-fail#');
 
 
         $otherUriMock = $this->createMock(URI::class);
@@ -114,33 +111,4 @@ class URITest extends TestCase
         $this->uriMock->handle($this->requestMock);
 
     }
-
-    public function testHandleMethodWhenHttpMethodIsWrong(): void
-    {
-        $this->uriConstraintsMock
-                ->expects($this->once())
-                ->method('formatUrlToRegex');
-
-        $this->requestMock
-                ->expects($this->once())
-                ->method('getPathInfo')
-                ->willReturn($this->pathInfo);
-
-        $this->uriMock
-                ->expects($this->once())        
-                ->method('getRoute')
-                ->willReturn($this->regexedRoute);
-
-        $this->requestMock
-                ->expects($this->once())
-                ->method('isMethod')
-                ->with($this->method)
-                ->willReturn(false);
-
-        $this->expectException(MethodNotSupportedForThisRoute::class);
-
-        $this->uriMock
-                ->handle($this->requestMock);
-    }
-
 }
