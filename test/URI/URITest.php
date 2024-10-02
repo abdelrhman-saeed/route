@@ -2,11 +2,13 @@
 
 use AbdelrhmanSaeed\Route\Exceptions\MethodNotSupportedForThisRoute;
 use AbdelrhmanSaeed\Route\Middleware;
-use AbdelrhmanSaeed\Route\URI\{URI, URIConstraints};
-use AbdelrhmanSaeed\Route\URI\URIAction;
+use AbdelrhmanSaeed\Route\URI\{
+        URI,
+        URIAction,
+        Constraints\URIConstraints,
+};
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
-
 
 
 class URITest extends TestCase

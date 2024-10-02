@@ -9,7 +9,7 @@ use AbdelrhmanSaeed\Route\URI\Constraints\{
     URIConstraints,
     URIConstraintsCollection
 };
-use AbdelrhmanSaeed\Route\Exceptions\NotSupportedHttpMethodException;
+use AbdelrhmanSaeed\Route\Exceptions\{NotSupportedHttpMethodException, RequestIsHandledException};
 use Symfony\Component\HttpFoundation\{Request, Response};
 
 
@@ -215,7 +215,12 @@ class Route
             $uriConstraint->formatRouteToRegexPattern();
         }
 
-        self::$headUri?->handle($request);
+        try {
+            self::$headUri?->handle($request);
+        }
+        catch(RequestIsHandledException $e) {
+            return;
+        }
 
         if ( ! is_null(self::$actionOnNotFound))
         {

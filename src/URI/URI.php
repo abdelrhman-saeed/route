@@ -2,7 +2,8 @@
 
 namespace AbdelrhmanSaeed\Route\URI;
 
-use AbdelrhmanSaeed\Route\Exceptions\MethodNotSupportedForThisRoute;
+use AbdelrhmanSaeed\Route\Exceptions\RequestIsHandledException;
+use AbdelrhmanSaeed\Route\URI\Constraints\UriConstraints;
 use AbdelrhmanSaeed\Route\Middleware;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -13,7 +14,7 @@ class URI
     private ?Middleware $middleware = null;
     private URIConstraints $uriConstraints;
 
-    public function __construct(private string $route, private string $method, private URIAction $uriAction)
+    public function __construct(private string $route, private array $methods, private URIAction $uriAction)
     {
         $this->route = "#^$this->route$#";
     }
@@ -23,9 +24,9 @@ class URI
         return $this->uriAction;
     }
 
-    private function getMethod(): string
+    private function getMethods(): array
     {
-        return $this->method;
+        return $this->methods;
     }
 
     public function getRoute(): string
@@ -80,11 +81,10 @@ class URI
 
     public function handle(Request $request): void
     {
-        $this->getUriConstraints()->formatUrlToRegex();
-
         $pathInfo = trim($request->getPathInfo(), '/');
 
-        if ( ! preg_match($this->getRoute(), $pathInfo, $matches))
+        if ( ! preg_match($this->getRoute(), $pathInfo, $matches)
+                || ! in_array(strtolower($request->getMethod()), $this->getMethods()) )
         {
             $this->next?->handle($request);
             return;
@@ -92,16 +92,11 @@ class URI
 
         unset($matches[0]);
 
-        if (! $request->isMethod($this->getMethod()))
-        {
-            throw new MethodNotSupportedForThisRoute(
-                "the {$request->getMethod()} method is not supported for this route, supported method is $this->method!"
-            );
-        }
-
         $this->middleware?->handle($request);
 
         $this->getUriAction()
                 ->execute(...$matches);
+
+        throw new RequestIsHandledException();
     }
 }
