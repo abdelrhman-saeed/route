@@ -3,96 +3,54 @@
 namespace AbdelrhmanSaeed\Route\URI;
 
 use AbdelrhmanSaeed\Route\Exceptions\RequestIsHandledException;
-use AbdelrhmanSaeed\Route\URI\Constraints\UriConstraints;
 use AbdelrhmanSaeed\Route\Middleware;
 use Symfony\Component\HttpFoundation\Request;
 
-class URI
+class URI extends AbstractURI
 {
-    private ?string $name = null;
-    private ?URI $next = null;
-    private ?Middleware $middleware = null;
-    private URIConstraints $uriConstraints;
-
-    public function __construct(private string $route, private array $methods, private URIAction $uriAction)
+    private function prepareMiddlewares(): ?Middleware
     {
-        $this->route = "#^$this->route$#";
+        if (empty($this->middlewares)) {
+            return null;
+        }
+
+        /**
+         * @var Middleware $head
+         * @var Middleware $current
+         */
+        $head = $current = new $this->middlewares[0];
+
+        for($i = 1; $i < count($this->middlewares); $i++)
+        {
+            $current->setNext(new $this->middlewares[$i]);
+            $current = $current->getNext();
+        }
+
+        return $head;
     }
-
-    private function getUriAction(): URIAction
-    {
-        return $this->uriAction;
-    }
-
-    private function getMethods(): array
-    {
-        return $this->methods;
-    }
-
-    public function getRoute(): string
-    {
-        return $this->route;
-    }
-
-    public function setRoute(string $route): self
-    {
-        $this->route = $route;
-
-        return $this;
-    }
-
-    public function setNext(URI $uri): self
-    {
-        $this->next = $uri;
-
-        return $this;
-    }
-
-    public function setUriConstraints(URIConstraints $uriConstraints): self
-    {
-        $this->uriConstraints = $uriConstraints;
-
-        return $this;
-    }
-
-    public function getUriConstraints(): URIConstraints
-    {
-        return $this->uriConstraints;
-    }
-    public function setMiddleware(Middleware $middelware): self
-    {
-        $this->middleware = $middelware;
-
-        return $this;
-    }
-
-    public function setName(string $name): self
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
 
     public function handle(Request $request): void
     {
+        $this->getUriconstraints()
+                ->formatRouteToRegexPattern();
+
         $pathInfo = trim($request->getPathInfo(), '/');
 
         if ( ! preg_match($this->getRoute(), $pathInfo, $matches)
                 || ! in_array(strtolower($request->getMethod()), $this->getMethods()) )
         {
             $this->next?->handle($request);
+        /**
+         * making a chain of URI objects apply the chain of responsibility design pattern
+         * each URI object in the chain will try to handle the request
+         * till one object handles it
+         */
             return;
         }
 
         unset($matches[0]);
 
-        $this->middleware?->handle($request);
+        $this->prepareMiddlewares()?->handle($request);
 
         $this->getUriAction()
                 ->execute(...$matches);
