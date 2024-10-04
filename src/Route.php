@@ -2,24 +2,28 @@
 
 namespace AbdelrhmanSaeed\Route;
 
-use AbdelrhmanSaeed\Route\Exceptions\WrongRoutePatternException;
-use AbdelrhmanSaeed\Route\URI\{URI, URIAction};
-use AbdelrhmanSaeed\Route\URI\Constraints\{
-    IURIConstraints,
-    URIConstraints,
-    URIConstraintsCollection
+
+use AbdelrhmanSaeed\Route\URI\{
+    URI, AbstractURI, URICollection
 };
-use AbdelrhmanSaeed\Route\Exceptions\{NotSupportedHttpMethodException, RequestIsHandledException};
+
+use AbdelrhmanSaeed\Route\URI\Constraints\URIConstraints;
+use AbdelrhmanSaeed\Route\URI\URIActions\URIAction;
+
+use AbdelrhmanSaeed\Route\Exceptions\{
+    NotSupportedHttpMethodException, RequestIsHandledException, WrongRoutePatternException
+};
+
 use Symfony\Component\HttpFoundation\{Request, Response};
 
 
 /**
  * 
- * @method static URIConstraints get(string $url, \Closure|array $action)
- * @method static URIConstraints post(string $url, \Closure|array $action) 
- * @method static URIConstraints put(string $url, \Closure|array $action)
- * @method static URIConstraints patch(string $url, \Closure|array $action)
- * @method static URIConstraints delete(string $url, \Closure|array $action)
+ * @method static AbstractURI get(string $url, \Closure|array $action)
+ * @method static AbstractURI post(string $url, \Closure|array $action) 
+ * @method static AbstractURI put(string $url, \Closure|array $action)
+ * @method static AbstractURI patch(string $url, \Closure|array $action)
+ * @method static AbstractURI delete(string $url, \Closure|array $action)
  */
 
 class Route
@@ -28,7 +32,7 @@ class Route
      * $headUri, $currentUri hold a reference to the current URI object
      * @var 
      */
-    private static ?URI $headUri , $currentUri = null;
+    private static ?AbstractURI $headURI = null , $currentURI = null;
 
     /**
      * $supportedHttpMethods defines the supported https methods by the package
@@ -37,23 +41,48 @@ class Route
     private static array $supportedHttpMethods = ['get', 'post', 'put', 'patch', 'delete'];
 
     /**
-     * @var array $IUriConstraints {
-     *  @type IUriConstraints
-     * }
-     */
-    private static array $IURIConstraints;
-
-    /**
      * the $actionOnNotFound Closure will be called if the request doesn't match any route
-     * @var ?\Closure $actionOnNotFound
+     * @var ?callable $actionOnNotFound
      */
-    private static ?\Closure $actionOnNotFound = null;
+    private static $actionOnNotFound = null;
 
-    public static function notFound(\Closure $callback): void
+    public static function notFound(callable $callback): void
     {
         self::$actionOnNotFound = $callback;
     }
-
+	/**
+	 * $headUri, $currentUri hold a reference to the current URI object
+	 * @return 
+	 */
+	public static function getHeadURI(): ?AbstractURI {
+		return self::$headURI;
+	}
+	
+	/**
+	 * $headUri, $currentUri hold a reference to the current URI object
+	 * @param  $headURI $headUri, $currentUri hold a reference to the current URI object
+	 */
+	public static function setHeadURI(?AbstractURI $headURI) {
+		self::$headURI = $headURI;
+		return;
+	}
+	
+	/**
+	 * $headUri, $currentUri hold a reference to the current URI object
+	 * @return 
+	 */
+	public static function getCurrentURI(): ?AbstractURI {
+        return self::$currentURI ?? self::$headURI;
+	}
+	
+	/**
+	 * $headUri, $currentUri hold a reference to the current URI object
+	 * @param  $currentURI $headUri, $currentUri hold a reference to the current URI object
+	 */
+	public static function setCurrentURI(?AbstractURI $currentURI) {
+		self::$currentURI = $currentURI;
+		return;
+	}
     /**
      * instantiates and add a URI object to the URIs Stack
      * @param string $route
@@ -61,32 +90,27 @@ class Route
      * @param \Closure|array $action
      * @return \AbdelrhmanSaeed\Route\URI\URI
      */
-    private static function addURI(string $route, array $methods, \Closure|array $action): URI
+    private static function buildURI(string $route, array $methods, \Closure|string|array $action): URI
     {
         // setting up an URI object and injecting a URIAction and URIConstraints objects to it
         ( $uri = new URI($route, $methods, new URIAction($action)) )
                         ->setUriConstraints(new URIConstraints($uri));
 
-        // return $uri;
-        /**
-         * making a chain of URI objects apply the chain of responsibility design pattern
-         * each URI object in the chain will try to handle the request
-         * till one object handles it
-         */
-        if ( is_null(self::$currentUri) ) {
-            return self::$headUri = self::$currentUri = $uri;
+        return $uri;
+    }
+    
+    private static function addURI(AbstractURI $URI): AbstractURI
+    {
+        if ( is_null(self::$currentURI) ) {
+            return self::$headURI = self::$currentURI = $URI;
         }
 
-        self::$currentUri
-                ->setNext($uri);
+        self::$currentURI
+                ->setNext($URI);
 
-        return self::$currentUri = $uri;
+        return self::$currentURI = $URI;
     }
 
-    private static function addIURIConstraints(IURIConstraints $iURIConstraints): IURIConstraints
-    {
-        return self::$IURIConstraints[] = $iURIConstraints;
-    }
     /**
      * __callstatic used to make static method calls using
      * the supportedHttpMethods as the methods name instead of duplicating the same code for each method
@@ -94,9 +118,9 @@ class Route
      * @param string $method
      * @param mixed $args
      * @throws \AbdelrhmanSaeed\Route\Exceptions\NotSupportedHttpMethodException
-     * @return \AbdelrhmanSaeed\Route\URI\Constraints\URIConstraints
+     * @return \AbdelrhmanSaeed\Route\URI\AbstractURI
      */
-    public static function __callstatic(string $method, mixed $args): IURIConstraints
+    public static function __callstatic(string $method, mixed $args): AbstractURI
     {
         /**
          * if the name of the called static method is not one of the supported http methods
@@ -110,21 +134,18 @@ class Route
          * returning the URIConstraints object that is linked the URI object
          * so the user be able to define some constraints on the route segments
          */
-        return self::addIURIConstraints(
-                self::addURI($args[0], [$method], $args[1])->getUriConstraints());
-
+        
+        return self::addURI(self::buildURI($args[0], [$method], $args[1]));
     }
 
-    public static function match(array $methods, string $route, \Closure|array $action): IURIConstraints
+    public static function match(array $methods, string $route, \Closure|array $action): AbstractURI
     {
-        return self::addIURIConstraints( self::addURI($route, $methods, $action)
-                        ->getUriConstraints());
+        return self::addURI(self::buildURI($route, $methods, $action));
     }
 
-    public static function any(string $route, \Closure|array $action): IURIConstraints
+    public static function any(string $route, \Closure|array $action): URI
     {
-        return self::addIURIConstraints( self::addURI($route, self::$supportedHttpMethods, $action)
-                        ->getUriConstraints());
+        return self::addURI(self::buildURI($route, self::$supportedHttpMethods, $action));
     }
     
     private static function prepareResourceRoute(string $route, bool $shallow): array
@@ -148,51 +169,37 @@ class Route
         return $preparedRoute;
     }
 
-    public static function resource(string $route, string $action, bool $api = true, bool $shallow = true): IURIConstraints
+    public static function resource(string $route, string $action, bool $api = true, bool $shallow = true): URICollection
     {
 
-        $preparedRoute              = self::prepareResourceRoute($route, $shallow);
-        $resourceRouteConstraints   = [];
+        $preparedRoute  = self::prepareResourceRoute($route, $shallow);
+
+        ($URI = self::buildURI($preparedRoute['general'], ['get'], [$action, 'index']))
+                        ->setNext(self::buildURI($preparedRoute['identified'], ['get'], [$action, 'show']))
+                        ->setNext(self::buildURI($preparedRoute['general'], ['post'], [$action, 'save']))
+                        ->setNext(self::buildURI($preparedRoute['identified'], ['put', 'patch'], [$action, 'update']))
+                        ->setNext($tail = self::buildURI($preparedRoute['identified'], ['delete'], [$action, 'delete']));
 
         if (! $api)
         {
-            $resourceRouteConstraints[] =
-                self::addIURIConstraints(
-                    self::addURI($preparedRoute['general'] . '/create', ['get'], [$action, 'create'])
-                                            ->getUriConstraints());
-
-            $resourceRouteConstraints[] =
-                self::addIURIConstraints(
-                    self::addURI($preparedRoute['identified'] . '/edit', ['get'], [$action, 'edit'])
-                                            ->getUriConstraints());
+            $tail->setNext(self::buildURI($preparedRoute['general'] . '/create', ['get'], [$action, 'create']))
+                    ->setNext(self::buildURI($preparedRoute['identified'] . '/edit', ['get'], [$action, 'edit']));
         }
 
-        $resourceRouteConstraints[] =
-            self::addIURIConstraints(
-                self::addURI($preparedRoute['general'], ['get'], [$action, 'index'])
-                                        ->getUriConstraints());
+        self::addURI($URICollection = new URICollection($URI));
 
-        $resourceRouteConstraints[] =
-            self::addIURIConstraints(
-                self::addURI($preparedRoute['identified'], ['get'], [$action, 'show'])
-                                        ->getUriConstraints());
+        return $URICollection;
+    }
 
-        $resourceRouteConstraints[] =
-            self::addIURIConstraints(
-                self::addURI($preparedRoute['general'], ['post'], [$action, 'save'])
-                                        ->getUriConstraints());
+    public static function setMiddlewares(string ...$middlewares): URICollection
+    {
+        return (new URICollection())
+                        ->setMiddlewares(...$middlewares);
+    }
 
-        $resourceRouteConstraints[] =
-            self::addIURIConstraints(
-                self::addURI($preparedRoute['identified'], ['put', 'patch'], [$action, 'update'])
-                                        ->getUriConstraints());
-
-        $resourceRouteConstraints[] =
-            self::addIURIConstraints(
-                self::addURI($preparedRoute['identified'], ['delete'], [$action, 'delete'])
-                                        ->getUriConstraints());
-
-        return new URIConstraintsCollection($resourceRouteConstraints);
+    public static function setController(string $controller): URICollection
+    {
+        return new URICollection( URIAction: new URIAction($controller) );
     }
 
     private static function includeRoutes(string $path): void
@@ -210,15 +217,14 @@ class Route
     public static function setup(string $routes, Request $request, Response $response): void
     {
         self::includeRoutes($routes);
-
-        foreach(self::$IURIConstraints as $uriConstraint) {
-            $uriConstraint->formatRouteToRegexPattern();
+        
+        if (is_null(self::$headURI)) {
+            return;
         }
 
-        try {
-            self::$headUri?->handle($request);
-        }
-        catch(RequestIsHandledException $e) {
+        try { self::$headURI?->handle($request); }
+        
+        catch(RequestIsHandledException $requestIsHandledException) {
             return;
         }
 
@@ -229,5 +235,8 @@ class Route
         }
 
         echo $response->setStatusCode(404);
+
     }
+
+
 }
