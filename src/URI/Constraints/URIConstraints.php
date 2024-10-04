@@ -5,34 +5,29 @@ namespace AbdelrhmanSaeed\Route\URI\Constraints;
 use AbdelrhmanSaeed\Route\URI\URI;
 
 
-class URIConstraints implements IURIConstraints
+class URIConstraints implements URIConstraintsInterface
 {
     private CONST string OPTIONAL_PARAMETER_REGEX   = '\w+\?';
+    private array $constraints = [];
 
     public function __construct(private URI $uri) {}
 
-    private function replaceRouteSegmentsWithRegex(string $segment, string $regex): self
-    {
-        $regexedRouteFormat = preg_replace(
-                        "#\{$segment\}#", $regex,
-                        $this->uri->getRoute(),
-                        -1,
-                        $count
-                        );
-
-        $count >! 0 ?: $this->uri->setRoute($regexedRouteFormat);
-
-        return $this;
+    private function wrapSegmentWithDelimiters(string $segment): string {
+        return "#\{$segment\}#";
     }
 
     public function where(string $segment, string $regex): self
     {
-        return $this->replaceRouteSegmentsWithRegex($segment, "($regex)");
+        $this->constraints[$this->wrapSegmentWithDelimiters($segment)] = "($regex)";
+
+        return $this;
     }
 
     public function whereIn(string $segment, array $in): self
     {
-        return $this->where($segment, '('. implode("|", $in) . ')' );
+        $this->constraints[$this->wrapSegmentWithDelimiters($segment)] = '('. implode("|", $in) . ')';
+        
+        return $this;
     }
 
     public function whereOptional(string|array $regex): self
@@ -40,12 +35,17 @@ class URIConstraints implements IURIConstraints
         ! is_array($regex)
             ?: $regex = implode("|", $regex);
 
-        return $this->replaceRouteSegmentsWithRegex(self::OPTIONAL_PARAMETER_REGEX, "*($regex)*");
+        $this->constraints[$this->wrapSegmentWithDelimiters(self::OPTIONAL_PARAMETER_REGEX)] = "*($regex)*";
+
+        return $this;
     }
 
     public function formatRouteToRegexPattern(): void
     {
-        $this->where(self::ALPHANUM, self::ALPHANUM);
-        $this->whereOptional(self::ALPHANUM);
+        $this->constraints[$this->wrapSegmentWithDelimiters(URIConstraintsInterface::ALPHANUM)]
+                = '(' . URIConstraintsInterface::ALPHANUM . ')';
+
+        $this->uri->setRoute(preg_replace(
+                    array_keys($this->constraints), $this->constraints, $this->uri->getRoute()));
     }
 }
