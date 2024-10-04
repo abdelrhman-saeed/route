@@ -3,6 +3,6 @@
 namespace AbdelrhmanSaeed\Route\Exceptions;
 
 
-class RequestIsHandledException extends \Exception {
+class RequestIsHandledException extends \Exception implements \Throwable {
 
 }
