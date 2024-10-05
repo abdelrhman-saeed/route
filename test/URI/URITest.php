@@ -1,13 +1,8 @@
 <?php
 
-use AbdelrhmanSaeed\Route\Exceptions\MethodNotSupportedForThisRoute;
-use AbdelrhmanSaeed\Route\Exceptions\RequestHandledException;
+use AbdelrhmanSaeed\Route\Exceptions\RequestIsHandledException;
 use AbdelrhmanSaeed\Route\Middleware;
-use AbdelrhmanSaeed\Route\URI\{
-        URI,
-        URIAction,
-        Constraints\URIConstraints,
-};
+use AbdelrhmanSaeed\Route\URI\{ URI, URIActions\URIAction, Constraints\URIConstraints, };
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -27,7 +22,6 @@ class URITest extends TestCase
     {
         $this->uriActionMock        = $this->createMock(URIAction::class);
         $this->uriConstraintsMock   = $this->createMock(URIConstraints::class);
-        $this->middlewareMock       = $this->createMock(Middleware::class);
 
         $this->requestMock          = $this->createMock(Request::class);
 
@@ -46,13 +40,17 @@ class URITest extends TestCase
                                 ->getMock();
 
         $this->uriMock
-                ->setUriConstraints($this->uriConstraintsMock)
-                ->setMiddleware($this->middlewareMock);
+                ->setUriConstraints($this->uriConstraintsMock);
 
 
     }
     public function testHandle(): void
     {
+        
+        $this->uriConstraintsMock
+                ->expects($this->once())
+                ->method('formatRouteToRegexPattern');
+
         $this->requestMock
                 ->expects($this->once())
                 ->method('getPathInfo')
@@ -68,17 +66,13 @@ class URITest extends TestCase
                 ->method('getMethod')
                 ->willReturn($this->method);
 
-        $this->middlewareMock
-                ->expects($this->once())    
-                ->method('handle')
-                ->with($this->requestMock);
 
         $this->uriActionMock
                 ->expects($this->once())
                 ->method('execute')
                 ->with(...['22', '3', 'information']);
 
-        $this->expectException(RequestHandledException::class);
+        $this->expectException(RequestIsHandledException::class);
 
         $this->uriMock
                 ->handle($this->requestMock);

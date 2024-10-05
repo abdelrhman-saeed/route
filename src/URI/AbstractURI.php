@@ -71,7 +71,7 @@ abstract class AbstractURI
 	/**
 	 * @return URIConstraints
 	 */
-	public function getUriconstraints(): URIConstraints {
+	public function getURIConstraints(): URIConstraints {
 		return $this->URIConstraints;
 	}
 	
@@ -79,7 +79,7 @@ abstract class AbstractURI
 	 * @param URIConstraints $URIConstraints 
 	 * @return self
 	 */
-	public function setUriconstraints(URIConstraints $URIConstraints): self {
+	public function setURIConstraints(URIConstraints $URIConstraints): self {
 		$this->URIConstraints = $URIConstraints;
 		return $this;
 	}

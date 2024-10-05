@@ -9,50 +9,33 @@ use AbdelrhmanSaeed\Route\URI\{
 
 class URIConstraintsTest extends TestCase
 {
-    private  $uriMock;
-    private $uriConstraintsMock;
+    private  $URIMock;
+    private $URIConstraints;
     protected function setUp(): void {
 
-        $this->uriMock              = $this->createMock(URI::class);
-        $this->uriConstraintsMock   = $this->getMockBuilder(URIConstraints::class)
-                                            ->setConstructorArgs([$this->uriMock])
-                                            ->onlyMethods(['where'])
-                                            ->getMock();
+        $this->URIMock          = $this->createMock(URI::class);
+        $this->URIConstraints   = new URIConstraints($this->URIMock);
     }
 
     
-    public function testReplaceRouteSegmentsWithRegex(): void
+    public function testFormatRouteToRegexPattern(): void
     {
-        $route          = 'users/{user}/posts/{post}'; 
-        $regexedRoute   = 'users/\w+/posts/\w+';
 
-        $this->uriMock
-                ->expects($this->once())    
+        $route          = 'users/{user}/posts/{post}'; 
+        $regexedRoute   = 'users/([a-z]+)/posts/(\w+)';
+
+        $this->URIMock
+                ->expects($this->once())
                 ->method('getRoute')
                 ->willReturn($route);
 
-        $this->uriMock
+        $this->URIMock
                 ->expects($this->once())
                 ->method('setRoute')
                 ->with($regexedRoute);
 
-        $reflectedReplaceRouteSegmentMethod =
-                (new \ReflectionClass(URIConstraints::class))
-                        ->getMethod('replaceRouteSegmentsWithRegex');
-
-        $reflectedReplaceRouteSegmentMethod
-                ->invokeArgs(
-                        $this->uriConstraintsMock,
-                        [IURIConstraints::ALPHANUM, IURIConstraints::ALPHANUM
-                ]);
-    }
-    public function testWhereIn(): void
-    {
-        $this->uriConstraintsMock
-                ->expects($this->once())    
-                ->method('where')
-                ->with('posts', '(dummy|dummy)');
-
-        $this->uriConstraintsMock->whereIn('posts', ['dummy', 'dummy']);
+        $this->URIConstraints
+                ->where('user', \AbdelrhmanSaeed\Route\URI\Constraints\URIConstraintsInterface::ALPHA)
+                ->formatRouteToRegexPattern();
     }
 }

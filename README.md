@@ -5,7 +5,7 @@ ROUTE IS A DYNAMIC ROUTING PACKAGE - i wrote that in capital because it looks co
 ## Installation
 
 ```cmd
-Composer require abdelrhman-saeed/route
+composer require abdelrhman-saeed/route
 ```
 
 ## Prerequisites
@@ -98,7 +98,7 @@ Route::delete('test', function () {
 /**
  * match method defines multiple http method to a route
  */
-Route::match(['put', 'patch', 'delete']'test', function () {
+Route::match(['put', 'patch', 'delete'],'test', function () {
 
         });
 
