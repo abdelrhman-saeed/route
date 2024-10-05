@@ -5,7 +5,7 @@ ROUTE IS A DYNAMIC ROUTING PACKAGE - i wrote that in capital because it looks co
 ## Installation
 
 ```cmd
-Composer require AbdelrhmanSaeed/route
+Composer require abdelrhman-saeed/route
 ```
 
 ## Prerequisites
