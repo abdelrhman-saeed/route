@@ -1,20 +1,14 @@
 # Route
 
-___
-
 ROUTE IS A DYNAMIC ROUTING PACKAGE
 
 ## Installation
-
-___
 
 ```cmd
 Composer require AbdelrhmanSaeed/route
 ```
 
 ## Prerequisites
-
-___
 
 - First you need to have a file that works as a starting point in your application (e.g., index.php).
 - Your server should redirect all the requests to this file ( a simple php server should do the job ).
@@ -26,8 +20,6 @@ php -S 127.0.0.1:8000
 - Another file for writing the routes you need (e.g., routes.php) - store it where every you like.
 
 ## How to use
-
-___
 
 ```php
 
@@ -378,7 +370,7 @@ Route::controller(SomeController::class)->setMiddlewares(SomeMiddleware::class)
             });
 ```
 
-> Do Some Action On 404 Reuqest
+> Do some action on 404 request
 
 ```php
 
