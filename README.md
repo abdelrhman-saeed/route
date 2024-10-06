@@ -134,17 +134,17 @@ Route::get('users/{slug}', fn (mixed $slug) => var_dump($slug))
 /**
  * or you can just use the defined constatins in the IURIConstraints interface
  * 
- * IURIConstraints::NUM - for numerics only
- * IURIConstraints::ALPHA - for letters only
- * IURIConstraints::ALPHANUM - for numerics and letters
+ * URIConstraintsInterface::NUM - for numerics only
+ * URIConstraintsInterface::ALPHA - for letters only
+ * URIConstraintsInterface::ALPHANUM - for numerics and letters
  */
 
 Route::get('users/{user}/posts/{post}', function (mixed $user, string $post) {
     // do stuff
 })
 ->getURIConstraints()
-->where('user', IURIConstraints::NUM)
-->where('post', IURIConstraitns::ALPHANUM);
+->where('user', URIConstraintsInterface::NUM)
+->where('post', URIConstraintsInterface::ALPHANUM);
 
 /**
  * specify the values that a route segment can be
@@ -163,7 +163,7 @@ Route::get('search/{users}/{filter?}', function (mixed $user, mixed $filter = nu
     // some filter stuff, idk
 })
 ->getURIConstraints()
-->whereOptional(IURIConstraints::ALPHA);
+->whereOptional(URIConstraintsInterface::ALPHA);
 // or we can set specific values for optional argmunts by passing an array with values instead a REGEX
 ->whereOptional(['value-1', 'value-2']);
 
