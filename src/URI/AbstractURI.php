@@ -5,14 +5,14 @@ namespace AbdelrhmanSaeed\Route\URI;
 use AbdelrhmanSaeed\Route\{
 	Middleware, URI\Constraints\URIConstraints, URI\URIActions\URIAction
 };
+use AbdelrhmanSaeed\Route\URI\Constraints\URIConstraintsInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-abstract class AbstractURI
+abstract class AbstractURI implements URIConstraintsInterface
 {
     protected array $middlewares = [];
     protected ?string $name = null;
     protected ?AbstractURI $next = null;
-    protected URIConstraints $URIConstraints;
 
     public function __construct(
             protected string $route, protected array $methods, protected ?URIAction $URIAction
@@ -68,21 +68,6 @@ abstract class AbstractURI
 		return $this;
 	}
 
-	/**
-	 * @return URIConstraints
-	 */
-	public function getURIConstraints(): URIConstraints {
-		return $this->URIConstraints;
-	}
-	
-	/**
-	 * @param URIConstraints $URIConstraints 
-	 * @return self
-	 */
-	public function setURIConstraints(URIConstraints $URIConstraints): self {
-		$this->URIConstraints = $URIConstraints;
-		return $this;
-	}
 	/**
 	 * @return string
 	 */

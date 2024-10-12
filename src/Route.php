@@ -83,21 +83,17 @@ class Route
 		self::$currentURI = $currentURI;
 		return;
 	}
-    /**
-     * instantiates and add a URI object to the URIs Stack
-     * @param string $route
-     * @param array $methods - http methods
-     * @param \Closure|array $action
-     * @return \AbdelrhmanSaeed\Route\URI\URI
-     */
-    private static function buildURI(string $route, array $methods, \Closure|string|array $action): URI
-    {
-        // setting up an URI object and injecting a URIAction and URIConstraints objects to it
-        ( $uri = new URI($route, $methods, new URIAction($action)) )
-                        ->setUriConstraints(new URIConstraints($uri));
-
-        return $uri;
-    }
+    // /**
+    //  * instantiates and add a URI object to the URIs Stack
+    //  * @param string $route
+    //  * @param array $methods - http methods
+    //  * @param \Closure|array $action
+    //  * @return \AbdelrhmanSaeed\Route\URI\URI
+    //  */
+    // private static function buildURI(string $route, array $methods, \Closure|string|array $action): URI
+    // {
+    //     return new URI($route, $methods, new URIAction($action));
+    // }
     
     private static function addURI(AbstractURI $URI): AbstractURI
     {
@@ -135,19 +131,26 @@ class Route
          * so the user be able to define some constraints on the route segments
          */
         
-        return self::addURI(self::buildURI($args[0], [$method], $args[1]));
+        return self::addURI(new URI($args[0], [$method], new URIAction($args[1])));
     }
 
     public static function match(array $methods, string $route, \Closure|array $action): AbstractURI
     {
-        return self::addURI(self::buildURI($route, $methods, $action));
+        return self::addURI(new URI($route, $methods, new URIAction($action)));
     }
 
     public static function any(string $route, \Closure|array $action): URI
     {
-        return self::addURI(self::buildURI($route, self::$supportedHttpMethods, $action));
+        return self::addURI(new URI($route, self::$supportedHttpMethods, new URIAction($action)));
     }
     
+    /**
+     * generate the route format for the resource uri
+     * @param string $route
+     * @param bool $shallow
+     * @throws \AbdelrhmanSaeed\Route\Exceptions\WrongRoutePatternException
+     * @return string[]
+     */
     private static function prepareResourceRoute(string $route, bool $shallow): array
     {
 
@@ -174,16 +177,16 @@ class Route
 
         $preparedRoute  = self::prepareResourceRoute($route, $shallow);
 
-        ($URI = self::buildURI($preparedRoute['general'], ['get'], [$action, 'index']))
-                        ->setNext(self::buildURI($preparedRoute['identified'], ['get'], [$action, 'show']))
-                        ->setNext(self::buildURI($preparedRoute['general'], ['post'], [$action, 'save']))
-                        ->setNext(self::buildURI($preparedRoute['identified'], ['put', 'patch'], [$action, 'update']))
-                        ->setNext($tail = self::buildURI($preparedRoute['identified'], ['delete'], [$action, 'delete']));
+        ($URI = new URI($preparedRoute['general'], ['get'], new URIAction([$action, 'index']) ))
+                        ->setNext(new URI($preparedRoute['identified'], ['get'], new URIAction([$action, 'show'])))
+                        ->setNext(new URI($preparedRoute['general'], ['post'], new URIAction([$action, 'save'])))
+                        ->setNext(new URI($preparedRoute['identified'], ['put', 'patch'], new URIAction([$action, 'update'])))
+                        ->setNext($tail = new URI($preparedRoute['identified'], ['delete'], new URIAction([$action, 'delete'])));
 
         if (! $api)
         {
-            $tail->setNext(self::buildURI($preparedRoute['general'] . '/create', ['get'], [$action, 'create']))
-                    ->setNext(self::buildURI($preparedRoute['identified'] . '/edit', ['get'], [$action, 'edit']));
+            $tail->setNext(new URI($preparedRoute['general'] . '/create', ['get'], new URIAction([$action, 'create'])))
+                    ->setNext(new URI($preparedRoute['identified'] . '/edit', ['get'], new URIAction([$action, 'edit'])));
         }
 
         self::addURI($URICollection = new URICollection($URI));

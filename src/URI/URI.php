@@ -4,10 +4,13 @@ namespace AbdelrhmanSaeed\Route\URI;
 
 use AbdelrhmanSaeed\Route\Exceptions\RequestIsHandledException;
 use AbdelrhmanSaeed\Route\Middleware;
+use AbdelrhmanSaeed\Route\URI\Constraints\URIConstraintsTrait;
 use Symfony\Component\HttpFoundation\Request;
 
 class URI extends AbstractURI
 {
+    use URIConstraintsTrait;
+
     private function prepareMiddlewares(): ?Middleware
     {
         if (empty($this->middlewares)) {
@@ -31,8 +34,7 @@ class URI extends AbstractURI
 
     public function handle(Request $request): void
     {
-        $this->getUriconstraints()
-                ->formatRouteToRegexPattern();
+        $this->setRoute( $this->formatRouteToRegexPattern($this->getRoute()) );
 
         $pathInfo = trim($request->getPathInfo(), '/');
 
@@ -40,11 +42,13 @@ class URI extends AbstractURI
                 || ! in_array(strtolower($request->getMethod()), $this->getMethods()) )
         {
             $this->next?->handle($request);
-        /**
-         * making a chain of URI objects apply the chain of responsibility design pattern
-         * each URI object in the chain will try to handle the request
-         * till one object handles it
-         */
+
+            /**
+             * making a chain of URI objects applying the chain of responsibility design pattern
+             * each URI object in the chain will try to handle the request
+             * till one object handles it
+             */
+
             return;
         }
 

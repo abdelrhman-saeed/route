@@ -2,7 +2,7 @@
 
 use AbdelrhmanSaeed\Route\Exceptions\RequestIsHandledException;
 use AbdelrhmanSaeed\Route\Middleware;
-use AbdelrhmanSaeed\Route\URI\{ URI, URIActions\URIAction, Constraints\URIConstraints, };
+use AbdelrhmanSaeed\Route\URI\{URI, URIActions\URIAction, Constraints\URIConstraintsTrait};
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -11,7 +11,6 @@ class URITest extends TestCase
 {
 
     private $uriActionMock;
-    private $uriConstraintsMock;
     private $middlewareMock;
     private $uriMock;
     private $requestMock;
@@ -20,10 +19,8 @@ class URITest extends TestCase
 
     public function setUp(): void
     {
-        $this->uriActionMock        = $this->createMock(URIAction::class);
-        $this->uriConstraintsMock   = $this->createMock(URIConstraints::class);
-
-        $this->requestMock          = $this->createMock(Request::class);
+        $this->uriActionMock    = $this->createMock(URIAction::class);
+        $this->requestMock      = $this->createMock(Request::class);
 
         $this->pathInfo         = 'users/22/posts/3/information';
         $this->url              = 'users/{user}/posts/{post}/{info?}';
@@ -31,25 +28,27 @@ class URITest extends TestCase
         $this->method           = 'get';
 
         $this->uriMock = $this->getMockBuilder(URI::class)
+                                ->enableProxyingToOriginalMethods()
                                 ->setConstructorArgs([
                                     $this->url,
                                     [$this->method],
                                     $this->uriActionMock
                                 ])
-                                ->onlyMethods(['getRoute'])
+                                ->onlyMethods(['getRoute', 'setRoute'])
                                 ->getMock();
-
-        $this->uriMock
-                ->setUriConstraints($this->uriConstraintsMock);
-
-
     }
     public function testHandle(): void
     {
         
-        $this->uriConstraintsMock
+        $this->uriMock
+                ->expects($this->exactly(2))
+                ->method('getRoute')
+                ->willReturn($this->url);
+        
+        $this->uriMock
                 ->expects($this->once())
-                ->method('formatRouteToRegexPattern');
+                ->method('setRoute')
+                ->with($this->regexedRoute);
 
         $this->requestMock
                 ->expects($this->once())
@@ -57,7 +56,7 @@ class URITest extends TestCase
                 ->willReturn($this->pathInfo);
 
         $this->uriMock
-                ->expects($this->once())        
+                // ->expects($this->once())        
                 ->method('getRoute')
                 ->willReturn($this->regexedRoute);
 
@@ -81,23 +80,33 @@ class URITest extends TestCase
 
     public function testHandleMethodWhenUriDoesntMatchUrl(): void
     {
+       $this->uriMock
+                ->expects($this->exactly(2))
+                ->method('getRoute')
+                ->willReturnOnConsecutiveCalls(
+                        $this->url, '#just-wrong-pattern-to-make-the-regex-fail#'
+                );
+        
+        $this->uriMock
+                ->expects($this->once())
+                ->method('setRoute')
+                ->with($this->regexedRoute);
 
         $this->requestMock
                 ->expects($this->once())
                 ->method('getPathInfo')
                 ->willReturn($this->pathInfo);
 
-        $this->uriMock
+        $this->requestMock
                 ->expects($this->once())
-                ->method('getRoute')
-                ->willReturn('#just-wrong-pattern-to-make-the-regex-fail#');
-
+                ->method('getMethod')
+                ->willReturn('wrong-method');
 
         $otherUriMock = $this->createMock(URI::class);
-
+ 
         $this->uriMock
                 ->setNext($otherUriMock);
-
+ 
         $otherUriMock->expects($this->once())
                         ->method('handle')
                         ->with($this->requestMock);

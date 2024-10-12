@@ -115,7 +115,7 @@ Route::any('test', function () {
 
 ```php
 
-use AbdelrhmanSaeed\Route\URI\Constraints\IURIConstraints;
+use AbdelrhmanSaeed\Route\URI\Constraints\URIConstraintsInterface;
 use AbdelrhmanSaeed\Route\Route;
 
 
@@ -123,28 +123,25 @@ use AbdelrhmanSaeed\Route\Route;
  * you can define constraints for the route segments
  */
 Route::get('users/{user}', fn (int $user) => var_dump($user))
-        ->getURIConstraints()
         ->where('user', '[A-z]+');
 
 Route::get('users/{slug}', fn (mixed $slug) => var_dump($slug))
-        ->getURIConstraints()
         ->where('slug', '\w+');
 
 
 /**
- * or you can just use the defined constatins in the IURIConstraints interface
+ * or you can just use the defined constatins in the URIConstraintsInterface
  * 
- * IURIConstraints::NUM - for numerics only
- * IURIConstraints::ALPHA - for letters only
- * IURIConstraints::ALPHANUM - for numerics and letters
+ * URIConstraintsInterface::NUM - for numerics only
+ * URIConstraintsInterface::ALPHA - for letters only
+ * URIConstraintsInterface::ALPHANUM - for numerics and letters
  */
 
 Route::get('users/{user}/posts/{post}', function (mixed $user, string $post) {
     // do stuff
 })
-->getURIConstraints()
-->where('user', IURIConstraints::NUM)
-->where('post', IURIConstraitns::ALPHANUM);
+->where('user', URIConstraintsInterface::NUM)
+->where('post', URIConstraintsInterface::ALPHANUM);
 
 /**
  * specify the values that a route segment can be
@@ -155,15 +152,13 @@ Route::get('users/{user}/posts/{post}', function (mixed $user, string $post) {
 Route::get('oauthcallback/{server}', function (string $server) {
     // do some oauth stuff
 })
-->getURIConstraints()
 ->whereIn('server', ['facebook', 'google']);
 
 // constraints for an optional arguments is done like this:
 Route::get('search/{users}/{filter?}', function (mixed $user, mixed $filter = null) {
     // some filter stuff, idk
 })
-->getURIConstraints()
-->whereOptional(IURIConstraints::ALPHA);
+->whereOptional(URIConstraintsInterface::ALPHA);
 // or we can set specific values for optional argmunts by passing an array with values instead a REGEX
 ->whereOptional(['value-1', 'value-2']);
 
@@ -246,11 +241,7 @@ Route::resource('users', UserController::class);
  */
 Route::resource('users', UserController::class, false);
 
-/**
- * in resource routes you don't need to call the getURIConstraints() method to add constraints
- * you can just do it directly
- */
-
+// constraints
 Route::resource('users', UserController::class)
         ->where('users', URIConstraintsInterface::ALPHA);
 

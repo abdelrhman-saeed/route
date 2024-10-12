@@ -104,9 +104,9 @@ class URICollection extends AbstractURI implements URIConstraintsInterface
 
     public function where(string $segment, string $regex): URICollection
     {
-        $callback = function (AbstractURI $URI) use ($segment, $regex) {
-                        $URI->getURIConstraints()
-                            ->where($segment, $regex);
+        $callback = function (AbstractURI $URI) use ($segment, $regex): void
+                    {
+                        $URI->where($segment, $regex);
                     };
 
         return $this->do($callback);
@@ -117,9 +117,9 @@ class URICollection extends AbstractURI implements URIConstraintsInterface
      */
     public function whereIn(string $segment, array $in): URICollection
     {
-        $callback = function (URI $URI) use ($segment, $in) {
-                        $URI->getURIConstraints()
-                            ->whereIn($segment, $in);
+        $callback = function (URI $URI) use ($segment, $in): void
+                    {
+                        $URI->whereIn($segment, $in);
                     };
 
         return $this->do($callback);
@@ -130,9 +130,9 @@ class URICollection extends AbstractURI implements URIConstraintsInterface
      */
     public function whereOptional(array|string $regex): URICollection
     {
-        $callback = function (URI $URI) use ($regex) {
-                        $URI->getURIConstraints()
-                            ->whereOptional($regex);
+        $callback = function (URI $URI) use ($regex): void
+                    {
+                        $URI->whereOptional($regex);
                     };
 
         return $this->do($callback);

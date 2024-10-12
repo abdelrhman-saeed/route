@@ -11,9 +11,9 @@ interface URIConstraintsInterface
     
     public CONST string ALPHANUM    = '\w+';
 
-    public function where(string $segment, string $regex): self;
+    public function where(string $segment, string $regex): mixed;
     
-    public function whereIn(string $segment, array $in): self;
+    public function whereIn(string $segment, array $in): mixed;
 
-    public function whereOptional(array|string $regex): self;
+    public function whereOptional(array|string $regex): mixed;
 }
