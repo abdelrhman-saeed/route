@@ -1,9 +1,9 @@
 <?php
 
-namespace AbdelrhmanSaeed\Route\URI\URIActions;
+namespace AbdelrhmanSaeed\Route\Resolvers;
 
 
-class URIAction {
+class Resolver {
 
     public function __construct(private string|array|\Closure $action) {
     }

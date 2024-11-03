@@ -1,6 +1,6 @@
 <?php
 
-namespace AbdelrhmanSaeed\Route;
+namespace AbdelrhmanSaeed\Route\Middlewares;
 
 use Symfony\Component\HttpFoundation\Request;
 

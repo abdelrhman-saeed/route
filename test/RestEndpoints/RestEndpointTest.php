@@ -1,25 +1,26 @@
 <?php
 
+use AbdelrhmanSaeed\Route\Endpoints\Rest\RestEndpoint;
 use AbdelrhmanSaeed\Route\Exceptions\RequestIsHandledException;
 use AbdelrhmanSaeed\Route\Middleware;
-use AbdelrhmanSaeed\Route\URI\{URI, URIActions\URIAction, Constraints\URIConstraintsTrait};
+use AbdelrhmanSaeed\Route\Resolvers\Resolver;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
 
-class URITest extends TestCase
+class RestEndpointTest extends TestCase
 {
 
-    private $uriActionMock;
+    private $resolverMock;
     private $middlewareMock;
-    private $uriMock;
+    private $restEndpointMock;
     private $requestMock;
 
     private string $url, $method, $pathInfo, $regexedRoute;
 
     public function setUp(): void
     {
-        $this->uriActionMock    = $this->createMock(URIAction::class);
+        $this->resolverMock     = $this->createMock(Resolver::class);
         $this->requestMock      = $this->createMock(Request::class);
 
         $this->pathInfo         = 'users/22/posts/3/information';
@@ -27,12 +28,12 @@ class URITest extends TestCase
         $this->regexedRoute     = '#^users/(\w+)/posts/(\w+)/?(\w+)*$#';
         $this->method           = 'get';
 
-        $this->uriMock = $this->getMockBuilder(URI::class)
+        $this->restEndpointMock = $this->getMockBuilder(RestEndpoint::class)
                                 ->enableProxyingToOriginalMethods()
                                 ->setConstructorArgs([
                                     $this->url,
                                     [$this->method],
-                                    $this->uriActionMock
+                                    $this->resolverMock
                                 ])
                                 ->onlyMethods(['getRoute', 'setRoute'])
                                 ->getMock();
@@ -40,12 +41,12 @@ class URITest extends TestCase
     public function testHandle(): void
     {
         
-        $this->uriMock
+        $this->restEndpointMock
                 ->expects($this->exactly(2))
                 ->method('getRoute')
                 ->willReturn($this->url);
         
-        $this->uriMock
+        $this->restEndpointMock
                 ->expects($this->once())
                 ->method('setRoute')
                 ->with($this->regexedRoute);
@@ -55,7 +56,7 @@ class URITest extends TestCase
                 ->method('getPathInfo')
                 ->willReturn($this->pathInfo);
 
-        $this->uriMock
+        $this->restEndpointMock
                 // ->expects($this->once())        
                 ->method('getRoute')
                 ->willReturn($this->regexedRoute);
@@ -66,28 +67,28 @@ class URITest extends TestCase
                 ->willReturn($this->method);
 
 
-        $this->uriActionMock
+        $this->resolverMock
                 ->expects($this->once())
                 ->method('execute')
                 ->with(...['22', '3', 'information']);
 
         $this->expectException(RequestIsHandledException::class);
 
-        $this->uriMock
+        $this->restEndpointMock
                 ->handle($this->requestMock);
 
     }
 
     public function testHandleMethodWhenUriDoesntMatchUrl(): void
     {
-       $this->uriMock
+       $this->restEndpointMock
                 ->expects($this->exactly(2))
                 ->method('getRoute')
                 ->willReturnOnConsecutiveCalls(
                         $this->url, '#just-wrong-pattern-to-make-the-regex-fail#'
                 );
         
-        $this->uriMock
+        $this->restEndpointMock
                 ->expects($this->once())
                 ->method('setRoute')
                 ->with($this->regexedRoute);
@@ -102,16 +103,16 @@ class URITest extends TestCase
                 ->method('getMethod')
                 ->willReturn('wrong-method');
 
-        $otherUriMock = $this->createMock(URI::class);
+        $endpointMock2 = $this->createMock(RestEndpoint::class);
  
-        $this->uriMock
-                ->setNext($otherUriMock);
+        $this->restEndpointMock
+                ->setNext($endpointMock2);
  
-        $otherUriMock->expects($this->once())
+        $endpointMock2->expects($this->once())
                         ->method('handle')
                         ->with($this->requestMock);
 
-        $this->uriMock->handle($this->requestMock);
+        $this->restEndpointMock->handle($this->requestMock);
 
     }
 }
