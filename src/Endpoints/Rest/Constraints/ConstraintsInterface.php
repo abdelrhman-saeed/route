@@ -1,9 +1,9 @@
 <?php
 
-namespace AbdelrhmanSaeed\Route\URI\Constraints;
+namespace AbdelrhmanSaeed\Route\Endpoints\Rest\Constraints;
 
 
-interface URIConstraintsInterface
+interface ConstraintsInterface
 {
     public CONST string ALPHA       = '[a-z]+';
 

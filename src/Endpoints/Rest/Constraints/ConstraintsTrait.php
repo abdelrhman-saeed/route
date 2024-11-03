@@ -1,9 +1,9 @@
 <?php
 
-namespace AbdelrhmanSaeed\Route\URI\Constraints;
+namespace AbdelrhmanSaeed\Route\Endpoints\Rest\Constraints;
 
 
-trait URIConstraintsTrait
+trait ConstraintsTrait
 {
     private CONST string OPTIONAL_PARAMETER_REGEX   = '\w+\?';
     private array $constraints = [];
@@ -39,10 +39,10 @@ trait URIConstraintsTrait
     private function formatRouteToRegexPattern(string $route): string
     {
         if (! isset($this->constraints[$this->wrapSegmentWithDelimiters(self::OPTIONAL_PARAMETER_REGEX)])) {
-            $this->whereOptional(URIConstraintsInterface::ALPHANUM);
+            $this->whereOptional(ConstraintsInterface::ALPHANUM);
         }
 
-        $this->where(URIConstraintsInterface::ALPHANUM, URIConstraintsInterface::ALPHANUM);
+        $this->where(ConstraintsInterface::ALPHANUM, ConstraintsInterface::ALPHANUM);
 
         return preg_replace( array_keys($this->constraints), $this->constraints, $route);
     }
