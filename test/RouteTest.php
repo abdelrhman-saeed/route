@@ -1,8 +1,8 @@
 <?php
 
+use AbdelrhmanSaeed\Route\API\Route;
 use AbdelrhmanSaeed\Route\Exceptions\NotSupportedHttpMethodException;
 use PHPUnit\Framework\TestCase;
-use AbdelrhmanSaeed\Route\Route;
 
 
 class RouteTest extends TestCase
