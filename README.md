@@ -27,7 +27,7 @@ php -S 127.0.0.1:8000
 
 // index.php
 
-use AbdelrhmanSaeed\Route\Route;
+use AbdelrhmanSaeed\Route\Api\Route;
 use Symfony\Component\HttpFoundation\{Request, Response};
 
 
@@ -41,7 +41,7 @@ Route::setup('routes.php', Request::createFromGlobals(), new Response);
 > next: the routes.php file
 
 ```php
-use AbdelrhmanSaeed\Route\Route;
+use AbdelrhmanSaeed\Route\Api\Route;
 use App\Controllers\SomeKindOfController;
 
 /**
@@ -115,8 +115,8 @@ Route::any('test', function () {
 
 ```php
 
-use AbdelrhmanSaeed\Route\URI\Constraints\URIConstraintsInterface;
-use AbdelrhmanSaeed\Route\Route;
+use AbdelrhmanSaeed\Route\Endpoints\Rest\Constraints\ConstraintsInterface;
+use AbdelrhmanSaeed\Route\Api\Route;
 
 
 /**
@@ -130,18 +130,18 @@ Route::get('users/{slug}', fn (mixed $slug) => var_dump($slug))
 
 
 /**
- * or you can just use the defined constatins in the URIConstraintsInterface
+ * or you can just use the defined constatins in the ConstraintsInterface
  * 
- * URIConstraintsInterface::NUM - for numerics only
- * URIConstraintsInterface::ALPHA - for letters only
- * URIConstraintsInterface::ALPHANUM - for numerics and letters
+ * ConstraintsInterface::NUM - for numerics only
+ * ConstraintsInterface::ALPHA - for letters only
+ * ConstraintsInterface::ALPHANUM - for numerics and letters
  */
 
 Route::get('users/{user}/posts/{post}', function (mixed $user, string $post) {
     // do stuff
 })
-->where('user', URIConstraintsInterface::NUM)
-->where('post', URIConstraintsInterface::ALPHANUM);
+->where('user', ConstraintsInterface::NUM)
+->where('post', ConstraintsInterface::ALPHANUM);
 
 /**
  * specify the values that a route segment can be
@@ -158,7 +158,7 @@ Route::get('oauthcallback/{server}', function (string $server) {
 Route::get('search/{users}/{filter?}', function (mixed $user, mixed $filter = null) {
     // some filter stuff, idk
 })
-->whereOptional(URIConstraintsInterface::ALPHA);
+->whereOptional(ConstraintsInterface::ALPHA);
 // or we can set specific values for optional argmunts by passing an array with values instead a REGEX
 ->whereOptional(['value-1', 'value-2']);
 
@@ -243,7 +243,7 @@ Route::resource('users', UserController::class, false);
 
 // constraints
 Route::resource('users', UserController::class)
-        ->where('users', URIConstraintsInterface::ALPHA);
+        ->where('users', ConstraintsInterface::ALPHA);
 
 ```
 
@@ -271,8 +271,8 @@ Route::resource('users.posts', PostController::class);
  */
 
 Route::resource('users.posts', PostController::class)
-        ->where('users', URIConstraintsInterface::NUM)
-        ->where('posts', URIConstraintsInterface::ALPHANUM);
+        ->where('users', ConstraintsInterface::NUM)
+        ->where('posts', ConstraintsInterface::ALPHANUM);
 
 ```
 
@@ -309,13 +309,6 @@ Route::resource(route: 'users.posts', action: PostController::class, api: true, 
  * for example:
  */
 
-/**
- * i am too lazy to write a full name space in a readme file
- */
-
-use RedirectIfAuthenticated;
-use PostController;
-
 Route::setMiddlewares(RedirectIfAuthenticated::class)
         ->group(function () {
                     Route::get('test', function () {
@@ -330,8 +323,6 @@ Route::setMiddlewares(RedirectIfAuthenticated::class)
 > Controller Grouping
 
 ```php
-
-use SomeController;
 
 
 Route::controller(SomeController::class)

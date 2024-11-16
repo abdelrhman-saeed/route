@@ -5,11 +5,11 @@ namespace AbdelrhmanSaeed\Route\Endpoints\Rest\Constraints;
 
 interface ConstraintsInterface
 {
-    public CONST string ALPHA       = '[a-z]+';
+    CONST ALPHA       = '[a-z]+';
 
-    public CONST string NUM         = '[0-9]+';
+    CONST NUM         = '[0-9]+';
     
-    public CONST string ALPHANUM    = '\w+';
+    CONST ALPHANUM    = '\w+';
 
     public function where(string $segment, string $regex): mixed;
     

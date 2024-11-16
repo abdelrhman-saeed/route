@@ -5,7 +5,7 @@ namespace AbdelrhmanSaeed\Route\Endpoints\Rest\Constraints;
 
 trait ConstraintsTrait
 {
-    private CONST string OPTIONAL_PARAMETER_REGEX   = '\w+\?';
+    private CONST OPTIONAL_PARAMETER_REGEX   = '\w+\?';
     private array $constraints = [];
 
     private function wrapSegmentWithDelimiters(string $segment): string {
