@@ -3,14 +3,19 @@
 namespace AbdelrhmanSaeed\Route\API;
 
 
-use AbdelrhmanSaeed\Route\Endpoints\Rest\{Rest, RestEndpoint, RestEndpointCollection};
-
-use AbdelrhmanSaeed\Route\Resolvers\Resolver;
-
-use AbdelrhmanSaeed\Route\Exceptions\{
-    NotSupportedHttpMethodException, RequestIsHandledException, WrongRoutePatternException
+use AbdelrhmanSaeed\Route\Endpoints\Rest\{
+    Rest,
+    RestEndpoint,
+    RestEndpointCollection
 };
 
+use AbdelrhmanSaeed\Route\Exceptions\{
+    NotSupportedHttpMethodException,
+    RequestIsHandledException,
+    WrongRoutePatternException
+};
+
+use AbdelrhmanSaeed\Route\Resolvers\Resolver;
 use Symfony\Component\HttpFoundation\{Request, Response};
 
 
@@ -23,7 +28,7 @@ use Symfony\Component\HttpFoundation\{Request, Response};
  * @method static AbstractURI delete(string $url, \Closure|array $action)
  */
 
-class Route
+class Route extends API
 {
     /**
      * $headUri, $currentUri hold a reference to the current URI object
@@ -37,16 +42,7 @@ class Route
      */
     private static array $supportedHttpMethods = ['get', 'post', 'put', 'patch', 'delete'];
 
-    /**
-     * the $actionOnNotFound Closure will be called if the request doesn't match any route
-     * @var ?callable $actionOnNotFound
-     */
-    private static $actionOnNotFound = null;
 
-    public static function notFound(callable $callback): void
-    {
-        self::$actionOnNotFound = $callback;
-    }
 
 	public static function getHeadRestEndpoint(): ?Rest {
 		return self::$headEndpoint;
@@ -65,7 +61,16 @@ class Route
 		self::$currentEndpoint = $currentEndpoint;
 		return;
 	}
+    public static function setMiddlewares(string ...$middlewares): RestEndpointCollection
+    {
+        return (new RestEndpointCollection())
+                        ->setMiddlewares(...$middlewares);
+    }
 
+    public static function setController(string $controller): RestEndpointCollection
+    {
+        return new RestEndpointCollection(resolver: new Resolver($controller) );
+    }
 
     private static function addRestEndpoint(Rest $endpoint): Rest
     {
@@ -182,33 +187,14 @@ class Route
         return self::addRestEndpoint(new RestEndpointCollection($endpoint));
     }
 
-    public static function setMiddlewares(string ...$middlewares): RestEndpointCollection
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param \Symfony\Component\HttpFoundation\Response $response
+     * 
+     * @return void
+     */
+    public static function handle(Request $request, Response $response): void
     {
-        return (new RestEndpointCollection())
-                        ->setMiddlewares(...$middlewares);
-    }
-
-    public static function setController(string $controller): RestEndpointCollection
-    {
-        return new RestEndpointCollection(resolver: new Resolver($controller) );
-    }
-
-    private static function includeRoutes(string $path): void
-    {
-        if (is_file($path)) {
-            require $path;
-            return;
-        }
-
-        for($i = 2; $i < count ( $files = scandir($path) ); $i++) {
-            require "$path/$files[$i]";
-        }
-
-    }
-    public static function setup(string $routes, Request $request, Response $response): void
-    {
-        self::includeRoutes($routes);
-
         if (is_null(self::$headEndpoint)) {
             return;
         }
@@ -224,6 +210,4 @@ class Route
 
         echo $response->setStatusCode(404)->send();
     }
-
-
 }
