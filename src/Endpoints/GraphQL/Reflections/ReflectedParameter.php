@@ -11,8 +11,7 @@ class ReflectedParameter extends \ReflectionParameter implements Reflected
 
     public function getType(): \ReflectionNamedType
     {
-        // $this->__construct();
-        return $this->getType();
+        return parent::getType();
     }
 
 
@@ -24,12 +23,8 @@ class ReflectedParameter extends \ReflectionParameter implements Reflected
                         
         foreach ($docBlock->getTagsByName('param') as $parameterTag)
         {
-            $docBlockType = $parameterTag->__tostring();
-
-            if (str_contains($docBlockType, $this->getName())
-                && $this->isList($docBlockType))
-            {
-                return explode(' ', $docBlockType)[0];
+            if (str_contains($parameterTag->__tostring(), $this->getName())) {
+                return explode(' ', $parameterTag->__tostring())[0];
             }
         }
 

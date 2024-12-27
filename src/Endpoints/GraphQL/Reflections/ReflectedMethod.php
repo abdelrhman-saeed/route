@@ -11,7 +11,7 @@ class ReflectedMethod extends \ReflectionMethod implements Reflected
 
     public function getType(): \ReflectionNamedType
     {
-        return $this->getReturnType();
+        return parent::getReturnType();
     }
 
     /**
@@ -40,8 +40,6 @@ class ReflectedMethod extends \ReflectionMethod implements Reflected
         if (is_null($returnType = $docBlock->getTagsByName('return')[0])) {
             return null;
         }
-
-        $this->isList($returnType);
 
         return $returnType;
     }

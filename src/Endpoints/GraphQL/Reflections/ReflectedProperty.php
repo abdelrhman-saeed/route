@@ -11,24 +11,18 @@ class ReflectedProperty extends \ReflectionProperty implements Reflected
 
     public function getType(): \ReflectionNamedType
     {
-        return $this->getType();
+        return parent::getType();
     }
 
 
     public function getTypeFromDocBlock(DocBlockFactoryInterface $docBlockFactoryInterface): string|null
     {
-        $docBlock = $docBlockFactoryInterface->create($this->getDocComment());
+        // $docBlockTags = $docBlockFactoryInterface->create($this->getDocComment())
+        //                 ->getTagsByName('var') [0];
+
+        return $docBlockFactoryInterface->create($this->getDocComment())
+                    ->getTagsByName('var')[0]?->__tostring();
                         
-        foreach ($docBlock->getTagsByName('var') as $parameterTag)
-        {
-            $docBlockType = $parameterTag->__tostring();
-
-            if ($this->isList($docBlockType)) {
-                return $docBlockType;
-            }
-        }
-
-        return null;
     }
 
 }

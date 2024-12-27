@@ -3,6 +3,7 @@
 namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections;
 
 use phpDocumentor\Reflection\DocBlockFactoryInterface;
+use ReflectionAttribute;
 
 
 /**
@@ -19,7 +20,7 @@ interface Reflected
     /**
      * Summary of getTypeFromDocBlock
      * @param \phpDocumentor\Reflection\DocBlockFactoryInterface $docBlockFactoryInterface
-     * @return void
+     * @return null|string
      */
     public function getTypeFromDocBlock(DocBlockFactoryInterface $docBlockFactoryInterface): ?string;
 
@@ -28,13 +29,14 @@ interface Reflected
      * @param string $docblock
      * @return bool
      */
-    public function isList(string &$docblock): bool;
+    public function isList(string $docblock): bool;
 
     /**
-     * Summary of getAttributes
      * @param mixed $name
      * @param int $flags
-     * @return array
+     * @return ReflectionAttribute[]
      */
     public function getAttributes(?string $name = null, int $flags = 0): array;
+
+    public function getName(): string;
 }
