@@ -19,6 +19,9 @@ class GraphObjectBuilder
      */
     private static array $cachedGraphObjects = [];
 
+    public static function getCachedObject(string $name): ?BaseGraphObject {
+        return self::$cachedGraphObjects[$name] ?? null;
+    }
     /**
      * Set the value of docBlockFactoryInterface
      *
@@ -45,27 +48,21 @@ class GraphObjectBuilder
     /**
      * Creates or Retrive GraphQL Objects Based on the given reflection
      * 
-     * @param \AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\Reflected $reflected
+    //  * @param \AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\Reflected $reflected
      * @return \AbdelrhmanSaeed\Route\Endpoints\GraphQL\BaseGraphObject
      */
     public static function build(Reflected $reflected): BaseGraphObject
     {
-        /**
-         * @var string
-         */
-        $typeFromDocBlock   = $reflected->getTypeFromDocBlock(self::$docBlockFactoryInterface);
-        $isList             = false;
+        $isList = false;
 
-        if (($typeName = $reflected->getType()->getName()) == 'array'
-                && !$isList = $reflected->isList($typeFromDocBlock))
+        if (($typeName = $reflected->getType()->getName()) == 'array')
         {
-            throw new WrongSchemaDefinition('anything type hinted as an array
-                        should have a docblock defining the return type such as T[]'
-                    );
+            $typeName   = $reflected->getTypeFromDocBlock(self::$docBlockFactoryInterface);
+            $isList     = $reflected->isList($typeName);
         }
 
         if ($isList) {
-            $typeName = str_replace('[]', '', $typeFromDocBlock);
+            $typeName = str_replace('[]', '', $typeName);
         }
 
         if (isset(self::$cachedGraphObjects[$typeName])) {
@@ -78,14 +75,16 @@ class GraphObjectBuilder
 
         else
         {
-            foreach ((new ReflectedClass($typeName))->getAttributes()
+            foreach (($reflectedClass = new ReflectedClass($typeName))->getAttributes()
                         as $attribute)
             {
+                $attribute = $attribute->newInstance();
+
                 if (is_a($attribute, BaseGraphObject::class))
                 {
-                    self::$cachedGraphObjects[$typeName]
-                        = $graphObject
-                        = $attribute->newInstance()->setReflection($reflected);
+                    self::$cachedGraphObjects[$attribute->getConfig('name')]
+                            = $graphObject
+                            = $attribute->setReflection($reflectedClass);
 
                     break;
                 }
