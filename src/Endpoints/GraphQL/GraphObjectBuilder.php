@@ -97,9 +97,9 @@ class GraphObjectBuilder
 
                 if (is_a($attribute, BaseGraphObject::class))
                 {
-                    self::$cachedGraphObjects[$attribute->getConfig('name')]
-                            = $graphObject
-                            = $attribute->setReflection($reflectedClass);
+
+                    $attribute->setReflection($reflectedClass);
+                    $graphObject = self::$cachedGraphObjects[$attribute->getConfig('name')] = $attribute;
 
                     break;
                 }

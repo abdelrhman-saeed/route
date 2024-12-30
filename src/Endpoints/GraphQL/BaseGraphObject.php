@@ -3,7 +3,7 @@
 namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL;
 
 use GraphQL\Type\Definition\Type;
-use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\{Reflected, ReflectedClass};
+use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\ReflectedClass;
 
 
 abstract class BaseGraphObject
@@ -43,9 +43,7 @@ abstract class BaseGraphObject
     public function setReflection(ReflectedClass $reflected): self
     {
         $this->reflected = $reflected;
-
-        $this->config['name']
-            ?? $reflected->getShortName();
+        $this->config['name'] ?? $this->config['name'] = $reflected->getShortName();
 
         return $this;
     }
