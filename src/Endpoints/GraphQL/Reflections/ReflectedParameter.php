@@ -2,33 +2,78 @@
 
 namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections;
 
-use phpDocumentor\Reflection\DocBlockFactoryInterface;
+use AbdelrhmanSaeed\Route\Endpoints\GraphQL\GraphObjectBuilder;
+use phpDocumentor\Reflection\DocBlock;
 
 
 class ReflectedParameter extends \ReflectionParameter implements Reflected
 {
     use ReflectedTrait;
 
-    public function getType(): \ReflectionNamedType
+    /**
+     * overriding the setDocBlock() method in the ReflectedTrait trait
+     * to get the DocBlock of the parameter's method
+     * @return ?DocBlock
+     */
+    private function getDocBlock(): ?DocBlock
     {
-        return parent::getType();
+        if (($methodDocComment = $this->getDeclaringFunction()->getDocComment()) == false) {
+            return null;
+        }
+
+        return GraphObjectBuilder::getDocBlockFactoryInterface()
+                    ->create($methodDocComment);
     }
 
-
-    public function getTypeFromDocBlock(DocBlockFactoryInterface $docBlockFactoryInterface): string|null
+    /**
+     * overriding the getDocComment() method in the ReflectedTrait trait
+     * to get the DocComment of the parameter from it's method
+     * 
+     * for example "@param T $param_name Description"
+     * 
+     * @return string|false
+     */
+    public function getDocComment(): string|false
     {
-
-        $docBlock = $docBlockFactoryInterface
-                        ->create($this->getDeclaringFunction()->getDocComment());
-                        
-        foreach ($docBlock->getTagsByName('param') as $parameterTag)
+        foreach ($this->getDocBlock()?->getTagsByName('param') as $parameterTag)
         {
             if (str_contains($parameterTag->__tostring(), $this->getName())) {
-                return explode(' ', $parameterTag->__tostring())[0];
+                return $parameterTag->__tostring();
             }
         }
 
-        return null;
+        return false;
     }
 
+    /**
+     * implementing the getTypeFromDocBlock() method in the Reflected Interface
+     * @return string|null
+     */
+    public function getTypeFromDocBlock(): string|null
+    {
+        if (!$docComment = $this->getDocComment()) {
+            return null;
+        }
+        
+        return explode(' ', $docComment, 2)[0];
+    }
+
+    /**
+     * implementing the getDescriptionFromDocBlock() method in the Reflected Interface
+     * @return string|null
+     */
+    public function getDescriptionFromDocBlock(): ?string
+    {
+        if (!$docComment = $this->getDocComment()) {
+            return null;
+        }
+
+        $docComment = explode(' ', $docComment, 3);
+
+        if (! isset($docComment[2])) {
+            return null;
+        }
+
+        return $docComment[2];
+    }
 }

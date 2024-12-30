@@ -31,6 +31,21 @@ class GraphObjectBuilder
         self::$docBlockFactoryInterface = $docBlockFactoryInterface;
     }
 
+    /**
+     * Summary of getDocBlockFactoryInterface
+     * @return \phpDocumentor\Reflection\DocBlockFactoryInterface
+     */
+    public static function getDocBlockFactoryInterface(): DocBlockFactoryInterface {
+        return self::$docBlockFactoryInterface;
+    }
+
+    /**
+     * Summary of wrapWithNeededObjects
+     * @param \AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\Reflected $reflected
+     * @param \AbdelrhmanSaeed\Route\Endpoints\GraphQL\BaseGraphObject $baseGraphObject
+     * @param bool $isList
+     * @return \AbdelrhmanSaeed\Route\Endpoints\GraphQL\BaseGraphObject
+     */
     private static function wrapWithNeededObjects(Reflected $reflected, BaseGraphObject $baseGraphObject, bool $isList): BaseGraphObject
     {
         if ($isList) {
@@ -57,7 +72,7 @@ class GraphObjectBuilder
 
         if (($typeName = $reflected->getType()->getName()) == 'array')
         {
-            $typeName   = $reflected->getTypeFromDocBlock(self::$docBlockFactoryInterface);
+            $typeName   = $reflected->getTypeFromDocBlock();
             $isList     = $reflected->isList($typeName);
         }
 

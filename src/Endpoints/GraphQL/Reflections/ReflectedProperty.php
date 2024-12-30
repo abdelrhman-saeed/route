@@ -2,27 +2,27 @@
 
 namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections;
 
-use phpDocumentor\Reflection\DocBlockFactoryInterface;
-
 
 class ReflectedProperty extends \ReflectionProperty implements Reflected
 {
     use ReflectedTrait;
 
-    public function getType(): \ReflectionNamedType
-    {
-        return parent::getType();
-    }
-
+    /**
+     * overriding the getDeclaringClass() method in the ReflectionProperty class
+     * the return an instance of the ReflectedClass instead of ReflectionClass
+     * 
+     * @return \AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\ReflectedClass
+     */
     public function getDeclaringClass(): ReflectedClass {
         return new ReflectedClass($this->getDeclaringClass()->getName());
     }
 
-    public function getTypeFromDocBlock(DocBlockFactoryInterface $docBlockFactoryInterface): string|null
+    /**
+     * implementing the getTypeFromDocBlock() method in the Reflected Interface
+     * @return string|null
+     */
+    public function getTypeFromDocBlock(): string|null
     {
-        return $docBlockFactoryInterface->create($this->getDocComment())
-                    ->getTagsByName('var')[0]?->__tostring();
-                        
+        return $this->getDocBlock()->getTagsByName('var')[0]?->__tostring();
     }
-
 }

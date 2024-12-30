@@ -9,9 +9,22 @@ class ReflectedMethod extends \ReflectionMethod implements Reflected
 {
     use ReflectedTrait;
 
+    /**
+     * implementing the getType() method in the Reflected Interface
+     * @return \ReflectionNamedType
+     */
     public function getType(): \ReflectionNamedType
     {
         return parent::getReturnType();
+    }
+
+    /**
+     * implementing the getTypeFromDocBlock() method in the Reflected Interface
+     * @return \phpDocumentor\Reflection\DocBlock\Tag
+     */
+    public function getTypeFromDocBlock(): ?string
+    {
+        return $this->getDocBlock()?->getTagsByName('return') [0];
     }
 
     /**
@@ -30,18 +43,6 @@ class ReflectedMethod extends \ReflectionMethod implements Reflected
         }
 
         return $reflectedParaemters;
-    }
-
-    public function getTypeFromDocBlock(DocBlockFactoryInterface $docBlockFactoryInterface): ?string
-    {
-
-        $docBlock = $docBlockFactoryInterface->create($this->getDocComment());
-
-        if (is_null($returnType = $docBlock->getTagsByName('return')[0])) {
-            return null;
-        }
-
-        return $returnType;
     }
 }
 
