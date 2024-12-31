@@ -12,8 +12,9 @@ abstract class HasFields extends BaseGraphObject
     protected static function getReflectedMetaData(Reflected $reflected): array
     {
         return [
-            'name'  => $reflected->getName(),
-            'type'  => GraphObjectBuilder::build($reflected)->build()
+            'name'          => $reflected->getName(),
+            'description'   => $reflected->getDescriptionFromDocBlock(),
+            'type'          => GraphObjectBuilder::build($reflected)->build()
         ];
     }
 
@@ -21,6 +22,10 @@ abstract class HasFields extends BaseGraphObject
     {
         foreach ($this->reflected->getProperties() as $reflectedPropoerty)
         {
+            if (empty($reflectedPropoerty->getAttributes(Field::class))) {
+                continue;
+            }
+
             $this->config['fields'][]
                 = self::getReflectedMetaData($reflectedPropoerty);
         }
