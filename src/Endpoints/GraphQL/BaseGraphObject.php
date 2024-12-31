@@ -25,25 +25,24 @@ abstract class BaseGraphObject
      */
     protected ?Type $type = null;
 
-    /**
-     * @param string $name
-     * @param string $description
-     */
-    public function __construct(?string $name = null, ?string $description = null) {
-        $this->config = [
-            'name'          => $name,
-            'description'   => $description
-        ];
-    }
 
-    public function getConfig(string $config): ?string {
+    public function getConfig(string $config): mixed {
         return $this->config[$config] ?? null;
     }
 
     public function setReflection(ReflectedClass $reflected): self
     {
         $this->reflected = $reflected;
-        $this->config['name'] ?? $this->config['name'] = $reflected->getShortName();
+
+        $this->config['name']
+            ?? $this->config['name'] = $reflected->getShortName();
+
+        if (! ($docComment = $reflected->getDocComment()))
+        {
+            $this->config['description']
+                = GraphObjectBuilder::getDocBlockFactoryInterface()
+                        ->create($docComment) ->getDescription();
+        }
 
         return $this;
     }

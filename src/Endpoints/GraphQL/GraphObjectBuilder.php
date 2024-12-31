@@ -2,11 +2,10 @@
 
 namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL;
 
-use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Exceptions\WrongSchemaDefinition;
 use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\Reflected;
 use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\ReflectedClass;
-use phpDocumentor\Reflection\DocBlockFactory;
 use phpDocumentor\Reflection\DocBlockFactoryInterface;
+use AbdelrhmanSaeed\Route\API\GraphQL;
 
 
 class GraphObjectBuilder
@@ -72,44 +71,65 @@ class GraphObjectBuilder
 
         if (($typeName = $reflected->getType()->getName()) == 'array')
         {
-            $typeName   = $reflected->getTypeFromDocBlock();
-            $isList     = $reflected->isList($typeName);
+            if ($isList = $reflected->isList($typeName = $reflected->getTypeFromDocBlock())) {
+                $typeName = str_replace('[]', '', $typeName);
+            }
         }
 
-        if ($isList) {
-            $typeName = str_replace('[]', '', $typeName);
-        }
+        $graphObject = null;
 
-        if (isset(self::$cachedGraphObjects[$typeName])) {
-            $graphObject = self::$cachedGraphObjects[$typeName];
-        }
-
-        if (! is_null(ScalarObject::scalars($typeName))) {
+        if (!is_null(ScalarObject::scalars($typeName))) {
             $graphObject = new ScalarObject($typeName);
         }
 
-        else
-        {
-            foreach (($reflectedClass = new ReflectedClass($typeName))->getAttributes()
-                        as $attribute)
-            {
-                $attribute = $attribute->newInstance();
-
-                if (is_a($attribute, BaseGraphObject::class))
-                {
-
-                    $attribute->setReflection($reflectedClass);
-                    $graphObject = self::$cachedGraphObjects[$attribute->getConfig('name')] = $attribute;
-
-                    break;
-                }
-            }
-
+        if (is_null($graphObject)) {
+            $graphObject = self::getGraphObjectByName($typeName);
         }
 
         return self::wrapWithNeededObjects($reflected, $graphObject, $isList);
 
     }
 
+    public static function getGraphObjectByName(string $name): ?BaseGraphObject
+    {
+        $reflectedClass = new ReflectedClass($name);
 
+        if (isset(self::$cachedGraphObjects[$reflectedClass->getShortName()])) {
+            return self::$cachedGraphObjects[$reflectedClass->getShortName()];
+        }
+
+        return self::getGraphObjectByReflection($reflectedClass);
+
+    }
+
+    private static function getGraphObjectByReflection(ReflectedClass $reflectedClass): ?BaseGraphObject
+    {
+        foreach ($reflectedClass->getAttributes() as $attribute)
+        {
+            $attribute = $attribute->newInstance();
+
+            if (is_a($attribute, BaseGraphObject::class))
+            {
+                return self::$cachedGraphObjects[$reflectedClass->getShortName()]
+                            = $attribute->setReflection($reflectedClass);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * register GraphQL Object classes
+     * @param string[] $classes
+     * @return void
+     */
+    public static function register(array $classes): void
+    {
+        $classes = array_map(
+            fn (string $class) => self::getGraphObjectByName($class)->build(),
+            $classes
+        );
+
+        GraphQL::getSchemaConfig()->setTypes($classes);
+    }
 }
