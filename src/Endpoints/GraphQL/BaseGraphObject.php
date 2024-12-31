@@ -37,11 +37,11 @@ abstract class BaseGraphObject
         $this->config['name']
             ?? $this->config['name'] = $reflected->getShortName();
 
-        if (! ($docComment = $reflected->getDocComment()))
+        if (($docComment = $reflected->getDocComment()) !== false)
         {
-            $this->config['description']
-                = GraphObjectBuilder::getDocBlockFactoryInterface()
-                        ->create($docComment) ->getDescription();
+            $this->config['description'] = GraphObjectBuilder::getDocBlockFactoryInterface()
+                    ->create($docComment)->getDescription()
+                    ->__tostring();
         }
 
         return $this;

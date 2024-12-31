@@ -37,7 +37,7 @@ abstract class API
      * @param \Symfony\Component\HttpFoundation\Response $response
      * @return void
      */
-    public abstract static function handle(Request $request, Response $response): void;
+    protected abstract static function handle(Request $request, Response $response): void;
 
     /**
      * 
