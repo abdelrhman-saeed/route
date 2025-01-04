@@ -3,7 +3,7 @@
 namespace AbdelrhmanSaeed\Route\API;
 
 use AbdelrhmanSaeed\Route\Endpoints\GraphQL\{
-    GraphObjectBuilder, HasFields\OutputObject, Reflections\ReflectedClass
+    Objects\GraphObjectBuilder, Objects\HasFields\Output, Reflections\ReflectedClass
 };
 
 use GraphQL\Type\{
@@ -69,7 +69,7 @@ class GraphQL extends API
         $reflectedMethod = (new ReflectedClass($controller))->getMethod($method);
 
         self::$rootGraphQLObjects[$rootObject][] =
-            OutputObject::setupResolvedField($reflectedMethod);
+            Output::setupResolvedField($reflectedMethod);
     }
 
     /**
