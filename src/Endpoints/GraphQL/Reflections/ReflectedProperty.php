@@ -23,6 +23,6 @@ class ReflectedProperty extends \ReflectionProperty implements Reflected
      */
     public function getTypeFromDocBlock(): string|null
     {
-        return $this->getDocBlock()->getTagsByName('var')[0]?->__tostring();
+        return $this->getDocBlock()?->getTagsByName('var')[0]?->__tostring();
     }
 }

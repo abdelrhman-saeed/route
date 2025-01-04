@@ -2,7 +2,7 @@
 
 namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections;
 
-use AbdelrhmanSaeed\Route\Endpoints\GraphQL\GraphObjectBuilder;
+use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\GraphObjectBuilder;
 use phpDocumentor\Reflection\DocBlock;
 
 

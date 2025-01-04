@@ -2,8 +2,12 @@
 
 namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections;
 
-use AbdelrhmanSaeed\Route\Endpoints\GraphQL\GraphObjectBuilder;
+use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\GraphObjectBuilder;
 use phpDocumentor\Reflection\DocBlock;
+use ReflectionType;
+use ReflectionNamedType;
+use ReflectionUnionType;
+use ReflectionIntersectionType;
 
 
 trait ReflectedTrait
@@ -17,9 +21,9 @@ trait ReflectedTrait
 
     /**
      * implementing the getType() method in the Reflected Interface
-     * @return \ReflectionNamedType
+     * @return ReflectionType|ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType
      */
-    public function getType(): \ReflectionNamedType
+    public function getType(): ReflectionType|ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType
     {
         return parent::getType();
     }

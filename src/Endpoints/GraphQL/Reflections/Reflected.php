@@ -3,6 +3,10 @@
 namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections;
 
 use ReflectionAttribute;
+use ReflectionIntersectionType;
+use ReflectionUnionType;
+use ReflectionType;
+use ReflectionNamedType;
 
 
 /**
@@ -14,9 +18,9 @@ interface Reflected
      * return ReflectionNamedType Object
      * wither it's a method, parameter or a property
      * 
-     * @return \ReflectionNamedType
+     * @return ReflectionType|ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType;
      */
-    public function getType(): \ReflectionNamedType;
+    public function getType(): ReflectionType|ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType;
 
     /**
      * just like getType() but it returns

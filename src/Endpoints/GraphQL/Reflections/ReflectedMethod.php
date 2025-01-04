@@ -2,8 +2,10 @@
 
 namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections;
 
-use phpDocumentor\Reflection\DocBlockFactoryInterface;
-
+use ReflectionType;
+use ReflectionNamedType;
+use ReflectionUnionType;
+use ReflectionIntersectionType;
 
 class ReflectedMethod extends \ReflectionMethod implements Reflected
 {
@@ -11,9 +13,9 @@ class ReflectedMethod extends \ReflectionMethod implements Reflected
 
     /**
      * implementing the getType() method in the Reflected Interface
-     * @return \ReflectionNamedType
+     * @return ReflectionType|ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType
      */
-    public function getType(): \ReflectionNamedType
+    public function getType(): ReflectionType|ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType
     {
         return parent::getReturnType();
     }
