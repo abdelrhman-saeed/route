@@ -1,15 +1,13 @@
 <?php
 
-namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\HasFields;
+namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\HasFields;
 
-use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\ReflectedParameter;
-use GraphQL\Type\Definition\InputObjectType;
-use GraphQL\Type\Definition\Type;
+use GraphQL\Type\Definition\{InputObjectType, Type};
 use Attribute;
 
 
 #[Attribute(Attribute::TARGET_CLASS)]
-class InputObject extends HasFields
+class Input extends HasFields
 {
 
     public function build(): Type

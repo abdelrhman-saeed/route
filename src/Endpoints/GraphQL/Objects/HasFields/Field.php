@@ -1,6 +1,6 @@
 <?php
 
-namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\HasFields;
+namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\HasFields;
 
 use Attribute;
 

@@ -1,18 +1,20 @@
 <?php
 
-namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL;
+namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects;
 
 use GraphQL\Type\Definition\Type;
-use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\ReflectedClass;
+use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\{
+    Reflected, ReflectedEnum, ReflectedClass
+};
 
 
-abstract class BaseGraphObject
+abstract class GraphObject
 {
     /**
      * Summary of reflection
      * @var 
      */
-    protected ReflectedClass $reflected;
+    protected Reflected|ReflectedEnum|ReflectedClass $reflected;
 
     /**
      * @var mixed[]
@@ -30,7 +32,7 @@ abstract class BaseGraphObject
         return $this->config[$config] ?? null;
     }
 
-    public function setReflection(ReflectedClass $reflected): self
+    public function setReflection(ReflectedClass|ReflectedEnum $reflected): self
     {
         $this->reflected = $reflected;
 

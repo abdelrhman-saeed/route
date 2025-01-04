@@ -1,26 +1,31 @@
 <?php
 
-namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL;
+namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects;
 
 use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\Reflected;
 use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\ReflectedClass;
+use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\ReflectedEnum;
 use phpDocumentor\Reflection\DocBlockFactoryInterface;
 use AbdelrhmanSaeed\Route\API\GraphQL;
+use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\Scalar;
+use ReflectionUnionType;
 
 
 class GraphObjectBuilder
 {
     private static DocBlockFactoryInterface $docBlockFactoryInterface;
+
     /**
-     * Cache created BaseGraphObject Instances
+     * Cache created GraphObject Instances
      * 
-     * @var BaseGraphObject[]
+     * @var GraphObject[]
      */
     private static array $cachedGraphObjects = [];
 
-    public static function getCachedObject(string $name): ?BaseGraphObject {
+    public static function getCachedObject(string $name): ?GraphObject {
         return self::$cachedGraphObjects[$name] ?? null;
     }
+
     /**
      * Set the value of docBlockFactoryInterface
      *
@@ -41,76 +46,92 @@ class GraphObjectBuilder
     /**
      * Summary of wrapWithNeededObjects
      * @param \AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\Reflected $reflected
-     * @param \AbdelrhmanSaeed\Route\Endpoints\GraphQL\BaseGraphObject $baseGraphObject
+     * @param \AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\GraphObject $graphObject
      * @param bool $isList
-     * @return \AbdelrhmanSaeed\Route\Endpoints\GraphQL\BaseGraphObject
+     * 
+     * @return \AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\GraphObject
      */
-    private static function wrapWithNeededObjects(Reflected $reflected, BaseGraphObject $baseGraphObject, bool $isList): BaseGraphObject
+    private static function wrapWithNeededObjects(Reflected $reflected, GraphObject $graphObject, bool $isList): GraphObject
     {
         if ($isList) {
-            $baseGraphObject = new ListedObject($baseGraphObject);
+            $graphObject = new Listed($graphObject);
         }
 
         if (!$reflected->getType()->allowsNull()) {
-            $baseGraphObject = new NotNull($baseGraphObject);
+            $graphObject = new NotNull($graphObject);
         }
 
-        return $baseGraphObject;
+        return $graphObject;
     }
 
 
     /**
      * Creates or Retrive GraphQL Objects Based on the given reflection
      * 
-    //  * @param \AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\Reflected $reflected
-     * @return \AbdelrhmanSaeed\Route\Endpoints\GraphQL\BaseGraphObject
+     * @param \AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\Reflected $reflected
+     * @return \AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\GraphObject
      */
-    public static function build(Reflected $reflected): BaseGraphObject
+    public static function build(Reflected $reflected): GraphObject
     {
         $isList = false;
+        $graphObject = null;
 
-        if (($typeName = $reflected->getType()->getName()) == 'array')
+        // union
+        if (is_a($reflected->getType(), ReflectionUnionType::class))
+        {
+            foreach (($types = $reflected->getType()->getTypes()) as $key => $type) {
+                $types[$key] = self::getGraphObjectByName($type->getName())->build();
+            }
+
+            self::$cachedGraphObjects[]
+                = $graphObject = new Union($types, $reflected);
+        }
+
+        // listed
+        elseif (($typeName = $reflected->getType()->getName()) == 'array')
         {
             if ($isList = $reflected->isList($typeName = $reflected->getTypeFromDocBlock())) {
                 $typeName = str_replace('[]', '', $typeName);
             }
         }
 
-        $graphObject = null;
-
-        if (!is_null(ScalarObject::scalars($typeName))) {
-            $graphObject = new ScalarObject($typeName);
+        // scalar
+        elseif (!is_null(Scalar::scalars($typeName))) {
+            $graphObject = new Scalar($typeName);
         }
 
-        if (is_null($graphObject)) {
-            $graphObject = self::getGraphObjectByName($typeName);
-        }
+        // Just a GraphObject
+        else { $graphObject = self::getGraphObjectByName($typeName); }
 
+        // wrap with listed and not nullable objects
         return self::wrapWithNeededObjects($reflected, $graphObject, $isList);
-
     }
 
-    public static function getGraphObjectByName(string $name): ?BaseGraphObject
+    public static function getGraphObjectByName(string $name): ?GraphObject
     {
         $reflectedClass = new ReflectedClass($name);
 
-        if (isset(self::$cachedGraphObjects[$reflectedClass->getShortName()])) {
-            return self::$cachedGraphObjects[$reflectedClass->getShortName()];
+        if ($reflectedClass->isEnum()) {
+            $reflectedClass = new ReflectedEnum($name);
+        }
+
+        if (isset(self::$cachedGraphObjects[lcfirst($reflectedClass->getShortName())])) {
+            return self::$cachedGraphObjects[lcfirst($reflectedClass->getShortName())];
         }
 
         return self::getGraphObjectByReflection($reflectedClass);
 
     }
 
-    private static function getGraphObjectByReflection(ReflectedClass $reflectedClass): ?BaseGraphObject
+    private static function getGraphObjectByReflection(ReflectedEnum|ReflectedClass $reflectedClass): ?GraphObject
     {
         foreach ($reflectedClass->getAttributes() as $attribute)
         {
             $attribute = $attribute->newInstance();
 
-            if (is_a($attribute, BaseGraphObject::class))
+            if (is_a($attribute, GraphObject::class))
             {
-                return self::$cachedGraphObjects[$reflectedClass->getShortName()]
+                return self::$cachedGraphObjects[lcfirst($reflectedClass->getShortName())]
                             = $attribute->setReflection($reflectedClass);
             }
         }

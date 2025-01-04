@@ -1,14 +1,14 @@
 <?php
 
-namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL;
+namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects;
 
 use GraphQL\Type\Definition\ListOfType;
 use GraphQL\Type\Definition\Type;
 
 
-class ListedObject extends BaseGraphObject
+class Listed extends GraphObject
 {
-    public function __construct(private BaseGraphObject $baseGraphObject) {
+    public function __construct(private GraphObject $baseGraphObject) {
 
     }
 

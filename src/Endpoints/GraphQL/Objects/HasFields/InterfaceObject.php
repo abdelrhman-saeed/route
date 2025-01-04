@@ -1,12 +1,10 @@
 <?php
 
-namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\HasFields;
+namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\HasFields;
 
-use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\ReflectedClass;
-use AbdelrhmanSaeed\Route\API\GraphQL;
-use GraphQL\Type\Definition\{InterfaceType, ObjectType, Type};
 use Attribute;
-use AbdelrhmanSaeed\Route\Endpoints\GraphQL\GraphObjectBuilder;
+use GraphQL\Type\Definition\{InterfaceType, Type};
+use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\GraphObjectBuilder;
 
 
 #[Attribute(Attribute::TARGET_CLASS)]
