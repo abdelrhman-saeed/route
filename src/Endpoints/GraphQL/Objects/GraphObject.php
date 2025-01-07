@@ -49,6 +49,10 @@ abstract class GraphObject
         return $this;
     }
 
+    public function getReflection(): ReflectedEnum|ReflectedClass {
+        return $this->reflected;
+    }
+
     /**
      * Summary of build
      * @return \GraphQL\Type\Definition\Type

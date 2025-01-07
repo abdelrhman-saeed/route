@@ -57,41 +57,7 @@ class Output extends HasFields
             $object = new $reflectedMethod->class;
         }
 
-        return function (
-                mixed $objectValue,
-                array $fieldArgs = [],
-                mixed $context, ResolveInfo $resolveInfo )
-
-                    use ($reflectedMethod, $object): mixed
-                    {
-                        foreach ($fieldArgs as $fieldName => $fieldVlaue) {
-
-                            if (! is_null($graphObject = GraphObjectBuilder::getCachedObject($fieldName))) {
-
-                                $objectName = $graphObject->reflected->getName();
-
-                                if ($graphObject->reflected->isEnum()) {
-
-                                    $fieldArgs[$fieldName] = $objectName::from($fieldVlaue);
-                                    continue;
-                                }
-
-                                $fieldArgs[$fieldName] = new $objectName;
-
-                                foreach($fieldVlaue as $argName => $value)
-                                {
-                                    $setter = 'set' . ucfirst($argName);
-
-                                    method_exists($fieldArgs[$fieldName], $setter)
-                                        ? $fieldArgs[$fieldName]->{$setter} ($value)
-                                        : $fieldArgs[$fieldName]->{$argName} = $value;
-                                }
-                            }
-                        } 
-
-                        array_unshift($fieldArgs, $resolveInfo);
-                        return $reflectedMethod->invoke($object, ...$fieldArgs);
-                    };
+        return OutputResolver::getResolver($reflectedMethod, $object);
     }
 
     public function build(): Type

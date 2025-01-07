@@ -19,7 +19,7 @@ class Enum extends GraphObject {
         $docBlock = GraphObjectBuilder::getDocBlockFactoryInterface();
         $enumDocBlock = $docBlock->create($this->reflected->getDocComment());
 
-        $config = [
+        $this->config = [
             'name'          => $this->reflected->getShortName(),
             'description'   => $enumDocBlock->getDescription()->__tostring(),
             'values'        => []
@@ -35,12 +35,19 @@ class Enum extends GraphObject {
                                         ->getDescription()
                                         ->__tostring();
 
-            $config['values'][$case->name] = [
+            $this->config['values'][$case->name] = [
                 'value'         => $case->value,
                 'description'   => $caseDescription
             ];
         }
 
-        return $this->type = new EnumType($config);
+        // just in case :/
+        if (! $this->reflected->isBacked()) {
+            foreach ($cases as $case) {
+                $this->config['values'][$case->name]['value'] = $case->name;
+            }
+        }
+
+        return $this->type = new EnumType($this->config);
     }
 }
