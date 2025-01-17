@@ -3,6 +3,7 @@
 namespace AbdelrhmanSaeed\Route\API;
 
 use Symfony\Component\HttpFoundation\{Request, Response};
+use AbdelrhmanSaeed\Route\Endpoints\EndpointCollection;
 
 
 abstract class API
@@ -14,9 +15,9 @@ abstract class API
 
 
 
-    // abstract public static function setMiddlewares(string ...$middlewares): mixed;
+    abstract public static function setMiddlewares(string ...$middlewares): EndpointCollection;
 
-    // abstract public static function setController(string $controller): mixed;
+    abstract public static function setController(string $controller): EndpointCollection;
 
     protected static function includeEndpoints(string $path): void
     {
