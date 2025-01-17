@@ -199,15 +199,19 @@ class Route extends API
             return;
         }
 
-        try { self::$headEndpoint?->handle($request); }
-            catch(RequestIsHandledException $requestIsHandledException) { return; }
-
-        if ( ! is_null(self::$actionOnNotFound))
+        if (! is_null($response = self::$headEndpoint?->handle($request)) )
         {
+            $response->isSuccessful() ?: print $response;
+            $response->send();
+
+            return;
+        }
+
+        if (self::$actionOnNotFound != null) {
             (self::$actionOnNotFound) ();
             return;
         }
 
-        echo $response->setStatusCode(404)->send();
+        echo (new Response(status: 404))->send();
     }
 }
