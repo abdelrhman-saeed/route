@@ -25,7 +25,7 @@ abstract class Endpoint
      * @param \AbdelrhmanSaeed\Route\Resolvers\Resolver $resolver
      * @return \AbdelrhmanSaeed\Route\Endpoints\Endpoint
      */
-    public function setResolver(Resolver $resolver): self
+    public function setResolver(Resolver $resolver): static
     {
         $this->resolver = $resolver;
 
@@ -47,7 +47,7 @@ abstract class Endpoint
      */
     public function setMiddlewares(string ...$middlewares): static
     {
-        $this->middlewares = $middlewares;
+        $this->middlewares = array_merge($this->middlewares, $middlewares);
 
         return $this;
     }
