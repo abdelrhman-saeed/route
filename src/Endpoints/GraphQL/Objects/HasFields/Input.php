@@ -16,7 +16,7 @@ class Input extends HasFields
             return $this->type;
         }
 
-        $this->setupFieldsFromProperties();
+        $this->setupFields();
 
         return $this->type = new InputObjectType($this->config);
     }

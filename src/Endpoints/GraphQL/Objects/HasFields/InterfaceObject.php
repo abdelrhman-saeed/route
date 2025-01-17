@@ -16,7 +16,7 @@ class InterfaceObject extends HasFields
             return $this->type;
         }
 
-        $this->setupFieldsFromProperties();
+        $this->setupFields();
 
         $this->config['resolveType'] =
             function ($value): Type {

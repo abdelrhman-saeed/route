@@ -51,7 +51,13 @@ class OutputResolver
                             }
                         } 
 
-                        array_unshift($fieldArgs, $resolveInfo);
+                        if (! empty($reflectedParameters = $reflectedMethod->getParameters())
+                                && $reflectedParameters[0]->getType()->getName() == ResolveInfo::class) {
+
+                            array_unshift($fieldArgs, $resolveInfo);
+                        }
+                            // array_unshift($fieldArgs, $resolveInfo);
+
                         return $reflectedMethod->invoke($object, ...$fieldArgs);
                     };
     }

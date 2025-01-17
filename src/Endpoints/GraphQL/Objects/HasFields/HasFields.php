@@ -2,39 +2,24 @@
 
 namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\HasFields;
 
-use AbdelrhmanSaeed\Route\Endpoints\GraphQL\{
-    Objects\GraphObject,
-    Objects\GraphObjectBuilder,
-    Reflections\Reflected,
-    Reflections\ReflectedEnum
-};
+use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\GraphObject;
 
 
 abstract class HasFields extends GraphObject
 {
-    protected static function getReflectedMetaData(Reflected $reflected): array
+    protected function setupFields(): void
     {
-        return [
-            'name'          => $reflected->getName(),
-            'description'   => $reflected->getDescriptionFromDocBlock(),
-            'type'          => GraphObjectBuilder::build($reflected)->build()
-        ];
-    }
-
-    protected function setupFieldsFromProperties(): void
-    {
-        if (is_a($this->reflected, ReflectedEnum::class)) {
-            return;
-        }
-
-        foreach ($this->reflected->getProperties() as $reflectedProperty)
+        $this->config['fields'] = [];
+        
+        foreach (
+            array_merge($this->reflected->getMethods(), $this->reflected->getProperties())
+                as $reflected)
         {
-            if (empty($reflectedProperty->getAttributes(Field::class))) {
+            if (empty($reflected->getAttributes(Field::class))) {
                 continue;
             }
 
-            $this->config['fields'][]
-                = self::getReflectedMetaData($reflectedProperty);
+            $this->config['fields'][] = (new Field(null, $reflected))->getConfig();
         }
     }
 }
