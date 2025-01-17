@@ -2,9 +2,8 @@
 
 namespace AbdelrhmanSaeed\Route\API;
 
-use AbdelrhmanSaeed\Route\Endpoints\GraphQL\{
-    Objects\GraphObjectBuilder, Objects\HasFields\Output, Reflections\ReflectedClass
-};
+
+use phpDocumentor\Reflection\DocBlockFactory;
 
 use GraphQL\Type\{
     Definition\ObjectType, Schema, SchemaConfig
@@ -18,7 +17,14 @@ use Symfony\Component\HttpFoundation\{
     Request, Response
 };
 
-use phpDocumentor\Reflection\DocBlockFactory;
+use AbdelrhmanSaeed\Route\{
+    Resolvers\Resolver,
+    Exceptions\WrongRoutePatternException,
+    Endpoints\GraphQL\Objects\GraphObjectBuilder,
+    Endpoints\GraphQL\Reflections\ReflectedClass,
+    Endpoints\GraphQL\Objects\HasFields\Field,
+    Endpoints\GraphQL\Objects\HasFields\FieldCollection
+};
 
 
 class GraphQL extends API
@@ -28,24 +34,40 @@ class GraphQL extends API
      * @var Schema
      */
     private static Schema $schema;
+    private static ?SchemaConfig $schemaConfig;
+    private static int $debugFlag = DebugFlag::NONE;
+    public CONST QUERY      = 'Query';
+    public CONST MUTATION   = 'Mutation';
+    
+    /**
+     * the GraphQL endpoint
+     * @var string
+     */
+    private static ?string $endpoint = null;
 
     /**
-     * GraphQL SchemaConfig
-     * @var 
+     * @return void
      */
-    private static ?SchemaConfig $schemaConfig;
+    public static function debug(): void {
+        self::$debugFlag = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
+    }
 
-    public CONST QUERY      = 'Query';
-
-    public CONST MUTATION   = 'Mutation';
+    /**
+     * GraphQL endpoint Setter
+     * @param string $name
+     * @return void
+     */
+    public static function setEndpoint(string $name): void {
+        self::$endpoint = $name;
+    }
 
     /**
      * associative array containing GraphQL root Object names as keys
      * and GraphQL Objects fields as values
      * 
-     * @var <string, string[]>
+     * @var <string,Field[]>
      */
-    private static array $rootGraphQLObjects = ['Query' => [], 'Mutation' => []];
+    public static array $rootGraphQLObjects = ['Query' => [], 'Mutation' => []];
 
     /**
      * @return \GraphQL\Type\SchemaConfig
@@ -57,45 +79,80 @@ class GraphQL extends API
     /**
      * generates GraphQL Object field config and add it to one of the root GraphQL Objects
      * 
-     * @param string $controller
      * @param string $method
+     * @param string $controller
      * @param string $rootObject
      * 
-     * @return void
+     * @return Field
      */
-    private static function addFieldToRootObject(string $controller, string $method, string $rootObject): void
+    private static function addFieldToRootObject(string $method, null|string $controller = null, string $rootObject): Field
     {
+        $resolver = new Resolver($method);
 
-        $reflectedMethod = (new ReflectedClass($controller))->getMethod($method);
+        /**
+         * @var ReflectedClass|null
+         */
+        static $reflected = null;
 
-        self::$rootGraphQLObjects[$rootObject][] =
-            Output::setupResolvedField($reflectedMethod);
+        if (! is_null($controller))
+        {
+            if (is_null($reflected) || $reflected->getName() !== $controller) {
+                $reflected = new ReflectedClass($controller);
+            }
+
+            $reflected = $reflected->getMethod($method);
+            $resolver->setAction([$controller, $method]);
+        }
+
+        return self::$rootGraphQLObjects[$rootObject][] =
+                new Field($resolver, $reflected ?? $method);
     }
 
     /**
      * uses GraphQL::addFieldToRootObject() to add fields to the root GraphQL QUERY Object
      * 
-     * @param string $controller
      * @param string $method
-     * @return void
+     * @param ?string $controller
+     * @return Field
      */
-    public static function query(string $controller, string $method): void
-    {
-        self::addFieldToRootObject($controller, $method, self::QUERY);
+    public static function query(string $method, null|string $controller = null): Field {
+        return self::addFieldToRootObject($method, $controller, self::QUERY);
     }
 
     /**
      * uses GraphQL::addFieldToRootObject() to add fields to the root GraphQL QUERY Object
      * 
-     * @param string $controller
      * @param string $method
-     * @return void
+     * @param null|string $controller
+     * @return Field
      */
-    public static function mutation(string $controller, string $method): void
-    {
-        self::addFieldToRootObject($controller, $method, self::MUTATION);
+    public static function mutation(string $method, null|string $controller = null): Field {
+        return self::addFieldToRootObject($method, $controller, self::MUTATION);
     }
 
+    public static function setController(string $controller): FieldCollection {
+        return new FieldCollection(resolver: new Resolver($controller));
+    }
+
+    public static function setMiddlewares(string ...$middlewares): FieldCollection {
+        return (new FieldCollection())->setMiddlewares(...$middlewares);
+    }
+    public static function resource(string $name, string $controller): FieldCollection
+    {
+        return self::setController($controller)
+                ->group(function () use ($name): void {
+
+                    $name = ucfirst($name);
+                    $queries = [
+                        "save"  => "mutation", "update" => "mutation", "delete" => "mutation",
+                        "index" => "query", "show"      => "query",
+                    ];
+
+                    foreach ($queries as $controllerMethod => $GQLMethod) {
+                        self::{$GQLMethod}("$controllerMethod$name");
+                    }
+                });
+    }
     /**
      * handles the incoming GraphQL request
      * 
@@ -110,11 +167,34 @@ class GraphQL extends API
         $result = GraphService::executeQuery(
                     schema: self::$schema,
                     source: $requestContent->query,
-                    variableValues: $requestContent->variables ?? null
-                )->toArray(DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE);
+                    variableValues: $requestContent->variables ?? null)
+                ->toArray(self::$debugFlag);
 
         $response->headers->add(['Content-Type' => 'application/json']);
         $response->setContent(json_encode($result))->send();   
+    }
+
+    private static function triggerFieldObjectsGenerators(): void
+    {
+        self::$rootGraphQLObjects[self::QUERY] =
+            array_map(
+                fn (Field $field) => $field->getConfig(),
+                self::$rootGraphQLObjects[self::QUERY]
+            );
+
+        self::$rootGraphQLObjects[self::MUTATION] =
+            array_map(
+                fn (Field $field) => $field->getConfig(),
+                self::$rootGraphQLObjects[self::MUTATION]
+            );
+    }
+
+    private static function instanciateGQLRootObject(string $name): null|ObjectType
+    {
+        return new ObjectType([
+            'name'      => $name,
+            'fields'    => self::$rootGraphQLObjects[$name]
+        ]);
     }
 
     /**
@@ -125,33 +205,32 @@ class GraphQL extends API
      */
     public static function setup(string $endpoints, Request $request, Response $response): void
     {
-        GraphObjectBuilder::setDocBlockFactoryInterface(DocBlockFactory::createInstance());
+        if (is_null(self::$endpoint)) {
+            throw new WrongRoutePatternException('GraphQL endpoint must be defined before GraphQL setup');
+        }
 
-        self::includeEndpoints($endpoints);
+        Route::any(self::$endpoint, function ()
+                use ($endpoints, $request, $response): void
+            {
+                GraphObjectBuilder::setDocBlockFactoryInterface(DocBlockFactory::createInstance());
 
-        /**
-         * @var null|ObjectType
-         */
-        $query = new ObjectType([
-            'name'      => 'Query',
-            'fields'    => self::$rootGraphQLObjects[self::QUERY]
-        ]);
+                self::includeEndpoints($endpoints);
+                self::triggerFieldObjectsGenerators();
 
-        /**
-         * @var null|ObjectType
-         */
-        $mutation = new ObjectType([
-            'name'      => 'Mutation',
-            'fields'    => self::$rootGraphQLObjects[self::MUTATION]
-        ]);
+                $query      = self::instanciateGQLRootObject(self::QUERY);
+                $mutation   = self::instanciateGQLRootObject(self::MUTATION);
 
-        $schemaConfig = self::getSchemaConfig();
+                $schemaConfig = self::getSchemaConfig();
 
-        $schemaConfig->setQuery($query)
-                        ->setMutation($mutation);
+                $schemaConfig->setQuery($query)
+                                ->setMutation($mutation);
 
-        self::$schema = new Schema($schemaConfig);
 
-        self::handle($request, $response);
+                self::$schema = new Schema($schemaConfig);
+
+                self::handle($request, $response);
+        });
     }
+
+
 }
