@@ -5,6 +5,7 @@ namespace AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects;
 use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\Reflected;
 use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\ReflectedClass;
 use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Reflections\ReflectedEnum;
+use GraphQL\Type\Definition\ResolveInfo;
 use phpDocumentor\Reflection\DocBlockFactoryInterface;
 use AbdelrhmanSaeed\Route\API\GraphQL;
 use AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\Scalar;
@@ -51,15 +52,13 @@ class GraphObjectBuilder
      * 
      * @return \AbdelrhmanSaeed\Route\Endpoints\GraphQL\Objects\GraphObject
      */
-    private static function wrapWithNeededObjects(Reflected $reflected, GraphObject $graphObject, bool $isList): GraphObject
-    {
-        if ($isList) {
-            $graphObject = new Listed($graphObject);
-        }
+    private static function wrapWithNeededObjects(Reflected $reflected, GraphObject $graphObject, bool $isList): GraphObject {
 
-        if (!$reflected->getType()->allowsNull()) {
+        if ($isList)
+            $graphObject = new Listed($graphObject);
+
+        if (!$reflected->getType()->allowsNull())
             $graphObject = new NotNull($graphObject);
-        }
 
         return $graphObject;
     }

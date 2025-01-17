@@ -32,20 +32,14 @@ class Enum extends GraphObject {
         {
             $caseDescription = $this->reflected->getCase($case->name);
             $caseDescription = $docBlock->create($caseDescription->getDocComment())
-                                        ->getDescription()
-                                        ->__tostring();
+                                        ->getDescription()->__tostring();
+
+            $value = $this->reflected->isBacked() ? $case->value : $case->name;
 
             $this->config['values'][$case->name] = [
-                'value'         => $case->value,
+                'value'         => $value,
                 'description'   => $caseDescription
             ];
-        }
-
-        // just in case :/
-        if (! $this->reflected->isBacked()) {
-            foreach ($cases as $case) {
-                $this->config['values'][$case->name]['value'] = $case->name;
-            }
         }
 
         return $this->type = new EnumType($this->config);
