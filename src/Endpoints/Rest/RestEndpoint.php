@@ -4,17 +4,16 @@
 namespace AbdelrhmanSaeed\Route\Endpoints\Rest;
 
 use AbdelrhmanSaeed\Route\Endpoints\Endpoint;
-use AbdelrhmanSaeed\Route\Endpoints\Rest\Constraints\ConstraintsInterface;
 use AbdelrhmanSaeed\Route\Endpoints\Rest\Constraints\ConstraintsTrait;
 use AbdelrhmanSaeed\Route\Exceptions\RequestIsHandledException;
-use AbdelrhmanSaeed\Route\Middlewares\Middleware;
 use AbdelrhmanSaeed\Route\Resolvers\Resolver;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 
-class RestEndpoint extends Rest
+class RestEndpoint extends Endpoint implements Rest
 {
-    use ConstraintsTrait;
+    use ConstraintsTrait, RestTrait;
 
     
 
@@ -28,40 +27,42 @@ class RestEndpoint extends Rest
 
 
     /**
-     * handles the client request
-     * 
+     * Summary of handle
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @throws \AbdelrhmanSaeed\Route\Exceptions\RequestIsHandledException
-     * @return void
+     * @return \Symfony\Component\HttpFoundation\Request|null $request
      */
-    public function handle(Request $request): void
+    public function handle(Request $request): null|Response
     {
-       $this->setRoute( $this->formatRouteToRegexPattern($this->getRoute()) );
+        $this->setRoute($this->formatRouteToRegexPattern($this->getRoute()));
 
         $pathInfo = trim($request->getPathInfo(), '/');
 
         if ( ! preg_match($this->getRoute(), $pathInfo, $matches)
                 || ! in_array(strtolower($request->getMethod()), $this->getMethods()) )
         {
-            $this->next?->handle($request);
-
             /**
              * making a chain of URI objects applying the chain of responsibility design pattern
              * each URI object in the chain will try to handle the request
              * till one object handles it
              */
-
-            return;
+            return $this->next?->handle($request);
         }
 
         unset($matches[0]);
 
-        $this->instantiateMiddlewares()?->handle($request);
+        $response = $this->instantiateMiddlewares()?->handle($request);
 
-        $this->getResolver()
-                ->execute(...$matches);
+        if (! is_null($response)) {
+            return $response;
+        }
 
-        throw new RequestIsHandledException();
+        if (is_a($response = $this->getResolver()->execute(...$matches),
+            Response::class)) {
+
+            return $response;
+        }
+
+        return new Response();
     }
 
 	/**

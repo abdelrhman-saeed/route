@@ -4,30 +4,29 @@ namespace AbdelrhmanSaeed\Route\Endpoints\Rest;
 
 use AbdelrhmanSaeed\Route\Endpoints\Endpoint;
 use AbdelrhmanSaeed\Route\Endpoints\Rest\Constraints\ConstraintsInterface;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\{Request, Response};
 
 
-abstract class Rest extends Endpoint implements ConstraintsInterface
+interface Rest extends ConstraintsInterface
 {
 
     /**
-     * Summary of next
-     * @var 
+     * Summary of setNext
+     * @param \AbdelrhmanSaeed\Route\Endpoints\Rest\Rest $endpoint
+     * @return \AbdelrhmanSaeed\Route\Endpoints\Rest\Rest
      */
-    protected ?Rest $next = null;
-
-    public function setNext(Rest $endpoint): Rest
-    {
-        return $this->next = $endpoint;
-    }
+    public function setNext(self $endpoint): Rest;
 
 	/**
 	 * Summary of next
-	 * @return 
+	 * @return null|Rest
 	 */
-	public function getNext(): ?Rest {
-		return $this->next;
-	}
+	public function getNext(): ?Rest;
 
-    abstract public function handle(Request $request): void;
+    /**
+     * Summary of handle
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return null|Response
+     */
+    public function handle(Request $request): null|Response;
 }
