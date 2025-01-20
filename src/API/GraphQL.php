@@ -85,7 +85,7 @@ class GraphQL extends API
      * 
      * @return Field
      */
-    private static function addFieldToRootObject(string $method, null|string $controller = null, string $rootObject): Field
+    private static function addFieldToRootObject(string $rootObject, string $method, null|string $controller = null): Field
     {
         $resolver = new Resolver($method);
 
@@ -115,8 +115,8 @@ class GraphQL extends API
      * @param ?string $controller
      * @return Field
      */
-    public static function query(string $method, null|string $controller = null): Field {
-        return self::addFieldToRootObject($method, $controller, self::QUERY);
+    public static function query(null|string $method = null, null|string $controller = null): Field {
+        return self::addFieldToRootObject(self::QUERY, $method, $controller);
     }
 
     /**
@@ -126,8 +126,8 @@ class GraphQL extends API
      * @param null|string $controller
      * @return Field
      */
-    public static function mutation(string $method, null|string $controller = null): Field {
-        return self::addFieldToRootObject($method, $controller, self::MUTATION);
+    public static function mutation(null|string $method = null, null|string $controller = null): Field {
+        return self::addFieldToRootObject( self::MUTATION, $method, $controller);
     }
 
     public static function setController(string $controller): FieldCollection {

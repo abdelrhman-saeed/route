@@ -11,7 +11,7 @@ class OutputResolver
 {
     public static function getResolver(ReflectedMethod $reflectedMethod, Object $object): \Closure
     {
-        return function (mixed $objectValue, array $fieldArgs = [], mixed $context, ResolveInfo $resolveInfo)
+        return function (mixed $objectValue, array $fieldArgs = [], mixed $context = null, null|ResolveInfo $resolveInfo = null)
 
                     use ($reflectedMethod, $object): mixed
                     {

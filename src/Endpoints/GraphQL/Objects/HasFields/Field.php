@@ -38,7 +38,7 @@ class Field extends Endpoint
      * @param null|Resolver $resolver
      * @param Reflected|string $reflected
      */
-    public function __construct(protected ?Resolver $resolver = null, private Reflected|string $reflected)
+    public function __construct(protected ?Resolver $resolver = null, private null|Reflected|string $reflected = null)
     {
         if (! is_string($reflected)) {
             $this->generateConfig();
