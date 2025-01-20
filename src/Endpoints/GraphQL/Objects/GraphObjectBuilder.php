@@ -92,6 +92,10 @@ class GraphObjectBuilder
             if ($isList = $reflected->isList($typeName = $reflected->getTypeFromDocBlock())) {
                 $typeName = str_replace('[]', '', $typeName);
             }
+        
+            if (!is_null(Scalar::scalars($typeName))) {
+                $graphObject = new Scalar($typeName);
+            }
         }
 
         // scalar
