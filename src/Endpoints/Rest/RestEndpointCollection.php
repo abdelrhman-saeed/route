@@ -7,13 +7,14 @@ use AbdelrhmanSaeed\Route\Endpoints\Rest\Constraints\ConstraintsInterface;
 use AbdelrhmanSaeed\Route\Exceptions\WrongRoutePatternException;
 use AbdelrhmanSaeed\Route\Resolvers\Resolver;
 use Symfony\Component\HttpFoundation\Request;
+use AbdelrhmanSaeed\Route\Endpoints\EndpointCollection;
+use AbdelrhmanSaeed\Route\Endpoints\Endpoint;
+use Symfony\Component\HttpFoundation\Response;
 
 
-class RestEndpointCollection extends Rest implements ConstraintsInterface
+class RestEndpointCollection extends EndpointCollection implements Rest, ConstraintsInterface
 {
-    public function __construct(protected ?Rest $endpoint = null, protected ?Resolver $resolver = null) {
-
-    }
+    use RestTrait;
 
     /**
      * @method RestEndpointCollection do(\Closure $callback) - applys the callback to all the chained URIs
@@ -30,23 +31,15 @@ class RestEndpointCollection extends Rest implements ConstraintsInterface
         return $this;
     }
 
-    public function setController(string $controller): self
+    public function setResolverToEndpoints(): static
     {
-        $this->setResolver(new Resolver($controller));
-        return $this;
-    }
-
-    public function setResolverToRestEndpoints(): RestEndpointCollection
-    {
-
         if (is_null($this->resolver)) {
             return $this;
         }
 
         $controller = $this->resolver->getAction();
-
         $callback   =
-            function (Rest $endpoint) use ($controller): void
+            function (Endpoint $endpoint) use ($controller): void
                 {
                     if ( ! is_string($endpoint->getResolver()->getAction())) {
                         throw new WrongRoutePatternException('routes nested in groups should only define methods as its action!');
@@ -59,7 +52,7 @@ class RestEndpointCollection extends Rest implements ConstraintsInterface
         return $this->do($callback);
     }
     
-    public function group(\Closure $callback): RestEndpointCollection
+    public function group(\Closure $callback): static
     {
         $headEndpoint       = Route::getHeadRestEndpoint();
         $currentEndpoint    = Route::getCurrentEndpoint();
@@ -83,8 +76,7 @@ class RestEndpointCollection extends Rest implements ConstraintsInterface
                         $endpoint->setMiddlewares(...$middlewares);
                     };
 
-        $this->setResolverToRestEndpoints()
-                ->do($callback); 
+        $this->setResolverToEndpoints()->do($callback); 
 
         return $this;
     }
@@ -124,17 +116,12 @@ class RestEndpointCollection extends Rest implements ConstraintsInterface
     }
 
     /**
-     * @inheritDoc
+     * Summary of handle
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Symfony\Component\HttpFoundation\Response|null
      */
-    public function handle(Request $request): void
+    public function handle(Request $request): null|Response
     {
-        $this->endpoint->handle($request);
-
-        /**
-         * if any of the chained URIs above handled the request
-         * an RequestHandlesException exception will be thrown
-         * block the next line of getting executed
-         */
-        $this->next?->handle($request);
+        return $this->endpoint->handle($request);
     }
 }

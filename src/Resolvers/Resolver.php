@@ -24,10 +24,14 @@ class Resolver {
 		return $this;
 	}
 
-    public function execute(mixed ...$args): void
+    public function execute(mixed ...$args): mixed
     {
-        ! is_array($this->action)
-            ? ($this->action) (...$args)
-            : (new $this->action[0])->{$this->action[1]} (...$args);
+        return ! is_array($this->action)
+					? ($this->action) (...$args)
+					: (new $this->action[0])->{$this->action[1]} (...$args);
     }
+
+	public function __invoke(...$args): mixed {
+		return $this->execute(...$args);
+	}
 }
