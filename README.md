@@ -1,369 +1,267 @@
 # Route
 
-ROUTE IS A DYNAMIC ROUTING PACKAGE - i wrote that in capital because it looks cooler
+`Route` is a **dynamic routing package** for PHP applications, designed to simplify the creation of RESTful routes.
+
+---
 
 ## Installation
 
-```cmd
+```bash
 composer require abdelrhman-saeed/route
 ```
 
+---
+
 ## Prerequisites
 
-- First you need to have a file that works as a starting point in your application (e.g., index.php).
-- Your server should redirect all the requests to this file ( a simple php server should do the job ).
+1. **Entry Point File**: Create an entry point file for your application (e.g., `index.php`).
+2. **Server Configuration**: Redirect all requests to this entry point file.
 
-```cmd
-php -S 127.0.0.1:8000
-```
+   Example using PHP's built-in server:
 
-- Another file for writing the routes you need (e.g., routes.php) - store it where every you like.
+   ```bash
+   php -S 127.0.0.1:8000
+   ```
 
-## How to use
+3. **Routes File**: Create a separate file to define your routes (e.g., `routes.php`). You can store it anywhere in your project.
+
+---
+
+## Usage Example
+
+**index.php:**
 
 ```php
-
 <?php
-
-// index.php
 
 use AbdelrhmanSaeed\Route\Api\Route;
 use Symfony\Component\HttpFoundation\{Request, Response};
 
-
-/**
- * the route path can be a path to a directory contains your defined routes
- * or to a simple file that has your routes
- */
+// Initialize the routing system
 Route::setup('routes.php', Request::createFromGlobals(), new Response);
 ```
 
-> next: the routes.php file
+**routes.php:**
 
 ```php
 use AbdelrhmanSaeed\Route\Api\Route;
 use App\Controllers\SomeKindOfController;
 
-/**
- * you can pass route segments to your handle ( and clouse or a Controller )
- * by wrapping the segment in a pair of a curly brackets "{segment}"
- *
- */ 
-Route::get('users/{user}/posts/{posts}', function (int $user, int $post) {
-        var_dump($user, $post);
+// Define routes with dynamic segments
+Route::get('users/{user}/posts/{post}', function (int $user, int $post) {
+    var_dump($user, $post);
 });
 
-// handle the request by defining a Controller (normal class), and its method
+// Use a controller to handle requests
 Route::get('posts/{post}/comments/{comment}', [SomeKindOfController::class, 'someMethod']);
 
-/**
- * you can pass an optional argument by wrapping the route segment
- * with a pair of curly brackets and a '?' inside it "{segment?}"
- * 
- * Note: an optional argument and only be in the end of the route
- */
+// Define routes with optional segments
 Route::get('search/users/{user}/{filter?}', function (int $user, ?string $filter = null) {
-    // do stuff
+    // Handle search logic
 });
 
-/**
- * Supported Http Methods are: ['get', 'post', 'put', 'patch', 'delete']
- */
-
-// get
-Route::get('test', function () {
-
-        });
-
-// post
+// Supported HTTP methods: ['get', 'post', 'put', 'patch', 'delete']
 Route::post('test', function () {
+    // Handle POST request
+});
 
-        });
-
-// put
 Route::put('test', function () {
+    // Handle PUT request
+});
 
-        });
+// Define multiple methods for a single route
+Route::match(['put', 'patch', 'delete'], 'test', function () {
+    // Handle multiple request types
+});
 
-// patch
-Route::patch('test', function () {
-
-        });
-
-// delete
-Route::delete('test', function () {
-
-        });
-
-/**
- * match method defines multiple http method to a route
- */
-Route::match(['put', 'patch', 'delete'],'test', function () {
-
-        });
-
-/**
- * any method defines all the supported http methods to a route
- */
+// Define a route for all HTTP methods
 Route::any('test', function () {
-
-        });
-
+    // Handle any HTTP method
+});
 ```
 
-> Route constraints
+---
+
+## Route Constraints
+
+You can apply constraints to route segments to validate their format.
 
 ```php
-
 use AbdelrhmanSaeed\Route\Endpoints\Rest\Constraints\ConstraintsInterface;
 use AbdelrhmanSaeed\Route\Api\Route;
 
-
-/**
- * you can define constraints for the route segments
- */
+// Define a constraint using regex
 Route::get('users/{user}', fn (int $user) => var_dump($user))
-        ->where('user', '[A-z]+');
+     ->where('user', '[A-z]+');
 
-Route::get('users/{slug}', fn (mixed $slug) => var_dump($slug))
-        ->where('slug', '\w+');
-
-
-/**
- * or you can just use the defined constatins in the ConstraintsInterface
- * 
- * ConstraintsInterface::NUM - for numerics only
- * ConstraintsInterface::ALPHA - for letters only
- * ConstraintsInterface::ALPHANUM - for numerics and letters
- */
-
-Route::get('users/{user}/posts/{post}', function (mixed $user, string $post) {
-    // do stuff
+// Use predefined constraints from ConstraintsInterface
+Route::get('users/{user}/posts/{post}', function (int $user, string $post) {
+    // Handle request
 })
 ->where('user', ConstraintsInterface::NUM)
 ->where('post', ConstraintsInterface::ALPHANUM);
 
-/**
- * specify the values that a route segment can be
- * 
- * oauthcallback/facebook
- * oauthcallback/google
- */
+// Specify allowed values for a segment
 Route::get('oauthcallback/{server}', function (string $server) {
-    // do some oauth stuff
+    // Handle OAuth callback
 })
 ->whereIn('server', ['facebook', 'google']);
-
-// constraints for an optional arguments is done like this:
-Route::get('search/{users}/{filter?}', function (mixed $user, mixed $filter = null) {
-    // some filter stuff, idk
-})
-->whereOptional(ConstraintsInterface::ALPHA);
-// or we can set specific values for optional argmunts by passing an array with values instead a REGEX
-->whereOptional(['value-1', 'value-2']);
-
 ```
 
-> Middlewares
+---
+
+## Middleware
+
+To add middleware to your routes, extend the `AbdelrhmanSaeed\Route\Middleware` class and implement the `handle()` method.
 
 ```php
-
-/**
- * to add middleware handlers to your routes you will need to extends the
- * \AbdelrhmanSaeed\Route\Middleware class
- */
-
 use AbdelrhmanSaeed\Route\Middleware;
 use Symfony\Component\HttpFoundation\Request;
 
-/**
- * don't worry about instantiating the middleware, the package does this for you
- * store it where ever you want
- */
 class RedirectIfAuthenticated extends Middleware
 {
-    // you need to implement the handle(Request $request): void method
-
     public function handle(Request $request): void
     {
-        /**
-         * handle request, if things went well you call the parent::handle($request) method
-         * to pass the request to the other middlewares so they can handle it too
-         */
-
+        // Perform checks before proceeding
         parent::handle($request);
     }
 }
-
-
 ```
 
+Assign middleware to a route:
+
 ```php
-/**
- * 
- * routes.php
- */
-
-use Somewhere\Mymiddlewares\AreStored\RedirectIfAuthenticated; 
-
 Route::get('login', function () {
-    // some authenticated logic, idk !
-})
-->setMiddlewares(RedirectIfAuthenticated::class);
-
+    // Login logic
+})->setMiddlewares(RedirectIfAuthenticated::class);
 ```
 
-> next : Resource Routing
+---
+
+## Resource Routing
+
+The `Route::resource()` method automatically generates RESTful routes for a given controller.
 
 ```php
-
-/**
- * 
- * this will make the following routes
- * 
- * 'users' route with 'get' method will execute UserController::index()
- * 'users' route with post method will execute UserController::save() 
- * 'users/{users}' route with 'get' method will execute UserController::show(mixed $user)
- * 'users/{users}' route with 'put,patch' methods will execute UserController::update(mixed $user)
- * 'users/{users}' route with 'delete' method will execute UserController::delete(mixed $user)
- * 
- * note: the methods in the controller are not statics,
- * i am just using the '::' to demonstrate the methods
- */
 Route::resource('users', UserController::class);
+```
 
-/**
- * the Route::resource() method takes another boolean paramters which is 'api' it's true by default
- * if set to false it will add other two route which are:
- * 
- * 'users/create' route with get method will execute UserController::create()
- * 'users/{user}/edit' route with get method will execute UserController::edit(mixed $user)
- */
+This will generate:
+
+- `GET /users` → `UserController::index()`
+- `POST /users` → `UserController::save()`
+- `GET /users/{user}` → `UserController::show(mixed $user)`
+- `PUT, PATCH /users/{user}` → `UserController::update(mixed $user)`
+- `DELETE /users/{user}` → `UserController::delete(mixed $user)`
+
+If you set the `api` parameter to `false`, two additional routes will be generated:
+
+- `GET /users/create` → `UserController::create()`
+- `GET /users/{user}/edit` → `UserController::edit(mixed $user)`
+
+```php
 Route::resource('users', UserController::class, false);
-
-// constraints
-Route::resource('users', UserController::class)
-        ->where('users', ConstraintsInterface::ALPHA);
-
 ```
 
-> Resource Routing : nested routes.
+---
+
+### Nested Resource Routing
+
+You can define nested resource routes using dot notation:
 
 ```php
-
-/**
- * we can make a nested route
- * by writing the parent route segment and the child segment separated by a dot
- * 
- * example: 'users.posts' will make the following routes
- * 
- * 'users/{users}/posts' route with 'get' method will execute UserController::index()
- * 'users/{users}/posts' route with 'post' method will execute UserController::save()
- * 'users/{users}/posts/{posts}' route with 'get' method will execute UserController::show(mixed $post)
- * 'users/{users}/posts/{posts}' route with 'put, patch' methods will execute UserController::update()
- * 'users/{users}/posts/{posts}' route with 'delete' method will execute UserController::delete()
- */
-
 Route::resource('users.posts', PostController::class);
+```
 
-/**
- * Constraints for nested routes can be like
- */
+This will generate routes like:
 
+- `GET /users/{user}/posts` → `PostController::index()`
+- `POST /users/{user}/posts` → `PostController::save()`
+- `GET /users/{user}/posts/{post}` → `PostController::show(mixed $post)`
+
+Apply constraints to nested routes:
+
+```php
 Route::resource('users.posts', PostController::class)
-        ->where('users', ConstraintsInterface::NUM)
-        ->where('posts', ConstraintsInterface::ALPHANUM);
-
+     ->where('users', ConstraintsInterface::NUM)
+     ->where('posts', ConstraintsInterface::ALPHANUM);
 ```
 
-> Nested Routing : shallow nesting
+---
+
+### Shallow Nesting
+
+Shallow nesting removes the parent ID from child routes when it's unnecessary.
 
 ```php
-
-/**
- * 
- * some times we don't need the parent id, only the child one for example
- * if we wan't a certain post we will get it by id, we don't need it's user's id for that
- * 
- * example: 'users.posts' with shallow nesting will make the following routes
- * 
- * 'users/posts' route with 'get' method will execute UserController::index()
- * 'users/posts' route with 'post' method will execute UserController::save()
- * 'users/posts/{posts}' route with 'get' method will execute UserController::show(mixed $post)
- * 'users/posts/{posts}' route with 'put, patchs' methods will execute UserController::update(mixed $post)
- * 'users/posts/{posts}' route with 'delete' method will execute UserController::delete(mixed $post)
- * 
- * shallow nesting is set to 'true' by default
- */
-
-Route::resource(route: 'users.posts', action: PostController::class, api: true, shallow: true);
+Route::resource('users.posts', PostController::class, shallow: true);
 ```
 
-> Middleware Grouping
+This will generate routes like:
+
+- `GET /users/posts` → `PostController::index()`
+- `POST /users/posts` → `PostController::save()`
+- `GET /users/posts/{post}` → `PostController::show(mixed $post)`
+
+---
+
+## Middleware Grouping
+
+You can group routes and assign a middleware to all of them:
 
 ```php
-/**
- * you can group multiple routes with a single middleware and group them with a controller
- * instead of assigning them to routes each time you define a route
- * 
- * for example:
- */
-
 Route::setMiddlewares(RedirectIfAuthenticated::class)
-        ->group(function () {
-                    Route::get('test', function () {
-                        // do something
-                            });
+     ->group(function () {
+         Route::get('test', function () {
+             // Handle request
+         });
 
-                    Route::resource('posts', PostController::class);
-                });
-
+         Route::resource('posts', PostController::class);
+     });
 ```
 
-> Controller Grouping
+---
+
+## Controller Grouping
+
+Group routes by a common controller:
 
 ```php
-
-
 Route::controller(SomeController::class)
-        ->group(
-            function () {
-                Route::get('someroute', 'theNameOfTheMethodInTheController');
-                Route::get('images', 'getImages');
-
-                /**
-                 * if you pass something other than the controller method name
-                 * a WrongRoutePatternException will be thrown
-                 */
-            }
-        );
-
-/**
- * you can group routes and both middlewares and controller
- */
-
-Route::controller(SomeController::class)->setMiddlewares(SomeMiddleware::class)
-        ->group(
-            function () {
-                Route::get('someroute', 'controllerMethod');
-                Route::post('posts', 'store');
-
-                Route::delete('users/{users}', 'deleteMethod');
-            });
+     ->group(function () {
+         Route::get('someroute', 'methodName');
+         Route::post('posts', 'store');
+     });
 ```
 
-> Do some action on 404 request
+You can also combine controller and middleware grouping:
 
 ```php
-
-Route::notFound(function () {
-    // some action that is done when the page your looking for is not found
-});
-
-/**
- * if you didn't define a notFound action a simple 404 http message
- * will be printed  
- */
-
-
+Route::controller(SomeController::class)
+     ->setMiddlewares(SomeMiddleware::class)
+     ->group(function () {
+         Route::get('route', 'method');
+         Route::post('posts', 'store');
+     });
 ```
+
+---
+
+## Handling 404 Requests
+
+Define a custom action for 404 responses:
+
+```php
+Route::notFound(function () {
+    // Handle 404 error
+    echo 'Page not found';
+});
+```
+
+If not defined, a simple 404 HTTP message will be returned.
+
+---
+
+## License
+
+This package is licensed under the MIT License.

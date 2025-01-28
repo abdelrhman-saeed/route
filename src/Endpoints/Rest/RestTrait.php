@@ -7,26 +7,31 @@ use AbdelrhmanSaeed\Route\Endpoints\Rest\Constraints\ConstraintsInterface;
 use Symfony\Component\HttpFoundation\{Request, Response};
 
 
-interface Rest extends ConstraintsInterface
+trait RestTrait
 {
 
     /**
-     * Summary of setNext
-     * @param \AbdelrhmanSaeed\Route\Endpoints\Rest\Rest $endpoint
-     * @return \AbdelrhmanSaeed\Route\Endpoints\Rest\Rest
+     * Summary of next
+     * @var null|Rest
      */
-    public function setNext(self $endpoint): Rest;
+    public ?Rest $next = null;
+
+    public function setNext(Rest $next): Rest {
+        return $this->next = $next;
+    }
 
 	/**
 	 * Summary of next
-	 * @return null|Rest
+	 * @return Rest
 	 */
-	public function getNext(): ?Rest;
+	public function getNext(): ?Rest {
+		return $this->next;
+	}
 
     /**
      * Summary of handle
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @return null|Response
+     * @return null|\Symfony\Component\HttpFoundation\Response
      */
-    public function handle(Request $request): null|Response;
+    abstract public function handle(Request $request): null|Response;
 }
