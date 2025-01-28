@@ -122,10 +122,6 @@ class RestEndpointCollection extends EndpointCollection implements Rest, Constra
      */
     public function handle(Request $request): null|Response
     {
-        if (is_null($response = $this->endpoint->handle($request))) {
-            return $this->next->handle($request);
-        }
-
-        return $response;
+	return $this->endpoint->handle($request) ?? $this->next?->hand($request);
     }
 }
